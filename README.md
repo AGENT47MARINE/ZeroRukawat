@@ -111,6 +111,8 @@ We chose PWA over native mobile app to ship faster on a single codebase without 
 
 ## Tech Stack
 
+**Phase 1 & 2 — Web First**
+
 | Layer | Technology |
 |---|---|
 | Frontend | React + TailwindCSS + Vite PWA Plugin |
@@ -124,6 +126,28 @@ We chose PWA over native mobile app to ship faster on a single codebase without 
 | WhatsApp | Twilio WhatsApp Sandbox |
 | Notifications | Firebase Cloud Messaging |
 | Hosting | Render (free tier) + GitHub Actions CI/CD |
+
+**Phase 2 onwards — Worker Mobile App (React Native)**
+
+The worker-facing app is built in React Native (Expo) starting Phase 2. Admin dashboard stays as a React web app — complex analytics are better on desktop. WhatsApp bot handles onboarding so the mobile app only needs 5 focused screens.
+
+| Layer | Technology | Purpose |
+|---|---|---|
+| Mobile Framework | React Native (Expo) | Cross-platform Android + iOS worker app |
+| Navigation | React Navigation | Screen routing |
+| Push Notifications | Firebase Cloud Messaging + Expo Notifications | Disruption alerts + payout confirmations |
+| Offline Cache | AsyncStorage | Policy status in low-connectivity areas |
+| State Management | Zustand | Shared state across screens |
+| API Layer | Axios | Connects to same FastAPI backend as web app |
+
+**5 screens in scope:**
+1. Home — active policy, coverage status, premium due date
+2. Payout history — past payouts with date, amount, reason
+3. Disruption alert — live active disruption in worker's zone
+4. Payout received — confirmation when UPI credit fires
+5. Settings — language, UPI ID, notification toggles
+
+> All business logic, ML models, and API integrations live in the FastAPI backend — shared by both the web admin dashboard and the React Native worker app.
 
 ---
 
