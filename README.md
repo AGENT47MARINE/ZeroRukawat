@@ -84,13 +84,13 @@ Google Maps Traffic API acts as secondary validation — confirms roads are genu
 
 ## Platform Choice
 
-**Progressive Web App (PWA) + WhatsApp Bot**
+**React Native (Worker App) + React Web (Admin) + WhatsApp Bot**
 
-- **PWA** — Single React codebase. Installable on Android home screen. No app store needed. Works offline.
-- **WhatsApp Bot** — Worker onboarding and notifications. Zero app download. Works on any Android. 6 regional languages. Under 5 minutes to sign up.
-- **Admin dashboard** — Desktop web for fraud review, disruption map, analytics, and payout management.
+- **React Native (Expo)** — Worker-facing mobile app for Android and iOS. 5 focused screens — policy status, payout history, disruption alerts, payout confirmation, settings. Built from Phase 2 onwards.
+- **React Web** — Admin dashboard for desktop. Fraud review queue, disruption map, analytics, payout monitor. Complex data views are better on desktop.
+- **WhatsApp Bot** — Handles all worker onboarding. Zero app download needed to sign up. Works on any Android phone in 6 regional languages. Under 5 minutes.
 
-We chose PWA over native mobile app to ship faster on a single codebase without sacrificing the mobile experience workers need.
+Both the React Native app and the React web dashboard connect to the same FastAPI backend — no duplication of business logic.
 
 ---
 
@@ -186,3 +186,74 @@ Isolation Forest fraud model, GPS spoofing detection, worker + admin dashboards,
 
 *ZeroRukawat — Zero Rukawat. Zero Disruption.*
 *Hackathon Submission — Phase 1 | March 2025*
+
+---
+
+## Adversarial Defense & Anti-Spoofing Strategy
+
+> **Crisis Update — March 20, 2026:** A coordinated syndicate of 500 delivery workers exploited a beta parametric platform using GPS-spoofing apps triggered simultaneously via Telegram groups during a real weather event. Our existing 5-layer fraud detection is insufficient against this attack because the weather trigger is genuine, platform logs show zero deliveries (they actually stayed home), and coordinated mass spoofing defeats Isolation Forest's anomaly baseline. This section details our architectural response.
+
+---
+
+### 1. Differentiating Genuine vs Spoofed Location
+
+GPS coordinates alone are obsolete as a verification signal. Our defense cross-validates GPS against **four independent data streams** that spoofing apps cannot simultaneously fake:
+
+| Signal | What We Check | Why Spoofing Fails |
+|---|---|---|
+| **IMU Sensor Data** | Accelerometer + gyroscope motion pattern during trigger window | Spoofing apps fake GPS coordinates but never touch device motion sensors. A worker "stranded in rain" shows zero motion. A person at home shows TV-watching/resting motion signature. These are measurably different. |
+| **GPS Signal Quality** | Accuracy radius variance over 15-minute window | Real GPS in heavy rain shows high variance (±50–200m). Spoofing apps output suspiciously perfect accuracy (±3–5m consistently). Perfect GPS in a storm = red flag. |
+| **Cell Tower Cross-Reference** | Phone's active cell tower vs claimed GPS zone | A phone cannot fake which cell tower it connects to at the network level. GPS says Kurla zone but cell tower is in Andheri = hard contradiction. |
+| **App IP Geolocation** | IP address approximate location when claim data is sent | Independent of GPS. Doesn't need to be exact — just needs to broadly match claimed zone within 10km radius. Mismatch = secondary fraud signal. |
+
+**Scoring:** Each contradiction adds to a spoofing confidence score (0–100). Score above 60 = amber hold. Score above 85 = red review. All four contradicting simultaneously = auto-block regardless of weather genuineness.
+
+---
+
+### 2. Detecting a Coordinated Fraud Ring
+
+Individual spoofing is hard to catch. Coordinated rings have a unique statistical fingerprint across these specific data points:
+
+**Temporal Patterns**
+- **Claim surge velocity:** Genuine disruptions generate claims ramping over 30–45 minutes as workers realise they cannot work. Coordinated rings generate a spike within a 2–3 minute window. Our Celery time-series monitor flags any zone where claim rate exceeds 3x baseline within 5 minutes.
+- **Velocity impossibility:** GPS logs showing a worker in Zone A at 9:00am and Zone B (5km away) at 9:02am. Physically impossible. Spoofing apps generate these micro-errors when coordinate sets are switched.
+
+**Spatial Patterns**
+- **Coordinate clustering anomaly:** Real stranded workers spread naturally across a wide delivery zone. Syndicate members using the same spoofing app often cluster tightly around a specific coordinate set (the app's default target point). Statistical density analysis flags unnatural clustering — 500 workers within a 200m radius is not organic.
+- **Zone-claim ratio breach:** Each delivery zone has a historical maximum claim count per disruption event. If Zone X has never exceeded 30 claims per event and suddenly shows 400, the entire zone is frozen and escalated to human review regardless of individual claim validity.
+
+**Device and Network Patterns**
+- **Device fingerprint correlation:** GPS spoofing apps leave identifiable signatures in device hardware data (same app version, same mock location provider string). Multiple claims sharing identical provider signatures = coordinated tool usage.
+- **Onboarding location vs claim location:** Worker registered their home address at KYC. Claimed disruption zone is 15km from their registered address with no delivery zone assignment history there. Flagged.
+
+**The Ring Detector Model:**
+A secondary Isolation Forest instance runs exclusively on zone-level aggregate data — not individual claims. It learns normal zone-level claim patterns and fires a **Zone Compromise Alert** when aggregate behaviour deviates. This model catches the syndicate even if every individual claim looks clean in isolation.
+
+---
+
+### 3. UX Balance — Handling Flagged Claims Without Penalising Honest Workers
+
+An honest worker in a genuine storm may have poor GPS signal, network drops, or a phone on low-battery mode. Our response is tiered — delay is proportional to evidence, never a silent rejection.
+
+```
+Spoofing Score 0–40    → GREEN  → Auto-pay in 15 minutes (normal flow)
+Spoofing Score 41–60   → AMBER  → 2-hour soft hold, system collects more data, auto-releases if resolved
+Spoofing Score 61–85   → RED    → Human review, worker notified immediately, resolved within 4 hours
+Spoofing Score 86–100  → BLOCK  → Claim rejected, worker notified with reason, appeal available
+```
+
+**Worker Communication at Each Stage:**
+
+- **Amber hold:** *"Aapka payout process ho raha hai. Thodi network issues ki wajah se 2 ghante lag sakte hain. Koi action lene ki zaroorat nahi."* (No alarm, no accusation — just a delay explanation)
+- **Red review:** *"Aapka claim review mein hai. Hum 4 ghante mein update karenge. Agar aap chahein toh apni location ki ek photo bhej sakte hain."* (Optional photo proof — not mandatory)
+- **Block:** *"Aapka claim approve nahi hua. Reason: [specific reason]. Appeal karne ke liye APPEAL bhejein."* (Specific reason given, appeal path provided)
+
+**The Honest Worker Guarantee:**
+- Maximum wait time for a legitimate claim: **4 hours**
+- Worker is always told their claim status and expected resolution time
+- No claim is ever silently rejected — every block comes with a reason and an appeal path
+- Photo submission is optional not mandatory — a worker without a smartphone camera is not disadvantaged
+- First-time flagged workers get benefit of the doubt — automatic appeal fast-tracked
+
+**Appeal Process:**
+Worker sends `APPEAL` via WhatsApp → human agent reviews within 2 hours → if genuine, payout released with a Rs 50 goodwill credit for the inconvenience.
