@@ -184,18 +184,6 @@ Isolation Forest fraud model, GPS spoofing detection, worker + admin dashboards,
 
 ---
 
-## Team
-
-| Name | Role | GitHub |
-|---|---|---|
-| | | |
-
----
-
-*ZeroRukawat — Zero Rukawat. Zero Disruption.*
-*Hackathon Submission — Phase 1 | March 2025*
-
----
 
 ## Adversarial Defense & Anti-Spoofing Strategy
 
