@@ -86,11 +86,19 @@ Google Maps Traffic API acts as secondary validation — confirms roads are genu
 
 **React Native (Worker App) + React Web (Admin) + WhatsApp Bot**
 
-- **React Native (Expo)** — Worker-facing mobile app for Android and iOS. 5 focused screens — policy status, payout history, disruption alerts, payout confirmation, settings. Built from Phase 2 onwards.
-- **React Web** — Admin dashboard for desktop. Fraud review queue, disruption map, analytics, payout monitor. Complex data views are better on desktop.
-- **WhatsApp Bot** — Handles all worker onboarding. Zero app download needed to sign up. Works on any Android phone in 6 regional languages. Under 5 minutes.
+**Why React Native for workers — not a browser app:**
+Delivery partners check their payout status, receive disruption alerts, and confirm coverage while on the road — between deliveries, on their bike, in poor connectivity areas. A native mobile app gives them push notifications that arrive even when the app is closed, offline access to policy status via AsyncStorage, and a home screen icon that feels like a tool they own. A mobile browser app cannot reliably deliver background push notifications on low-end Android devices — which is exactly the hardware most delivery partners use. React Native with Expo gives us true native performance without maintaining separate Android and iOS codebases.
 
-Both the React Native app and the React web dashboard connect to the same FastAPI backend — no duplication of business logic.
+**Why React Web for admin — not a mobile dashboard:**
+The admin dashboard handles fraud review queues, live disruption heatmaps across multiple cities, loss ratio analytics, and payout monitoring — all data-heavy tasks that require large screen real estate, multi-column tables, and precise mouse interactions. These tasks are genuinely worse on mobile. Judges and insurers reviewing the platform will also be on desktops. React Web with TailwindCSS is the correct tool for this use case.
+
+**Why WhatsApp Bot for onboarding — not the app:**
+A delivery partner should not need to download an app just to sign up. WhatsApp is already installed on over 500 million Indian phones. Onboarding via WhatsApp means zero install friction, works on any Android including Rs 5,000 entry-level phones, and supports 6 regional languages from day one. By the time the worker downloads the React Native app, their policy is already active.
+
+**Why not Flutter, why not a single PWA for everything:**
+Flutter was considered but our team's existing React knowledge means faster delivery and fewer bugs under a 6-week deadline. A single PWA for both workers and admin was considered but PWAs cannot deliver reliable background push notifications on Android without Play Store presence — a critical requirement for disruption alerts at 9am when a worker needs to know immediately whether to head out or stay home.
+
+Both React Native and React Web connect to the same FastAPI backend — zero duplication of business logic, ML models, or API integrations.
 
 ---
 
