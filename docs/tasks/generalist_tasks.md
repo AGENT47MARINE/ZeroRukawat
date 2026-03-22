@@ -21,3 +21,20 @@ This document acts as the Execution Plan for the "Glue" – system integrity, de
   - [ ] Script the Github Actions CI/CD pipeline to automate Pytest runs and Docker image pushes on PR.
 - [ ] **Data Anonymization (Cron Job)**
   - [ ] Write the 72-hour `purge_raw_telemetry` script ensuring compliance with the Data Privacy rules (deleting raw GPS/IMU logs post-claim resolution).
+
+## Phase 3 Focus: Worker Mobile App (React Native/Expo)
+- [ ] **Project Setup (Alpha Shell)**
+  - [ ] Initialize the project: `npx create-expo-app worker-app`.
+  - [ ] Install `zustand` (state) and `@react-native-async-storage/async-storage` (offline capability).
+- [ ] **UI Implementation (High Contrast, Low Bandwidth)**
+  - [ ] Implement Home Screen displaying current Zone Risk / Premium status.
+  - [ ] Build the Alert Screen (Big bold text/colors when a disruption triggers in their zone).
+  - [ ] Payout History Screen parsing `GET /workers/{worker_id}/payouts`.
+- [ ] **Offline Resilience (AsyncStorage)**
+  - [ ] Save the latest known Premium/Policy status locally so the app opens instantly without network calls.
+  - [ ] Build an offline queuing system for the GPS telemetry loop (cache internally if `POST` fails, retry later).
+- [ ] **Firebase Cloud Messaging (FCM)**
+  - [ ] Configure `expo-notifications` for Android.
+  - [ ] Ensure background handlers are capable of waking the app to display a Custom 'Disruption Alert' modal even when closed.
+- [ ] **Localization**
+  - [ ] Add `i18next` parsing for Hindi, Tamil, Telugu based on the device's default locale.
