@@ -7,7 +7,7 @@ This document outlines the core RESTful endpoints for the ZeroRukawat backend, b
 `http://localhost:8000/api/v1` (Local Development)
 
 ## Authentication
-Admin endpoints require a Bearer token (JWT) in the `Authorization` header. Worker endpoints (mobile app) use token-based authentication linked to their registered phone number.
+Admin endpoints require a Bearer token (JWT) in the `Authorization` header. Worker endpoints (mobile app) use token-based authentication linked to their registered phone number or whatsapp.
 
 ---
 
