@@ -1,0 +1,6 @@
+twilio
+fastapi
+uvicorn[standard]
+python-dotenv
+requests
+pydantic

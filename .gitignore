@@ -1,0 +1,42 @@
+# Node.js
+admin-web/node_modules/
+mobile-app/node_modules/
+whatsapp-bot/node_modules/
+dist/
+build/
+.eslintcache
+
+# Python
+backend/__pycache__/
+ai-ml/__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.env
+.venv
+pip-log.txt
+pip-delete-this-directory.txt
+.tox/
+.coverage
+.cache
+nosetests.xml
+coverage.xml
+*,cover
+.hypothesis/
+.pytest_cache/
+
+# ML Data & Models
+ai-ml/data/*
+!ai-ml/data/.gitkeep
+ai-ml/models/*.joblib
+ai-ml/models/*.pkl
+
+# OS specific
+.DS_Store
+Thumbs.db
+
+# Docker
+.docker/
