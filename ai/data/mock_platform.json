@@ -1,0 +1,358 @@
+{
+  "hubs": {
+    "HUB_MUM_01": {
+      "city": "Mumbai",
+      "status": "ACTIVE",
+      "capacity": 344
+    },
+    "HUB_DEL_01": {
+      "city": "Delhi",
+      "status": "CLOSED",
+      "capacity": 541
+    },
+    "HUB_BAN_01": {
+      "city": "Bangalore",
+      "status": "ACTIVE",
+      "capacity": 796
+    },
+    "HUB_HYD_01": {
+      "city": "Hyderabad",
+      "status": "CLOSED",
+      "capacity": 280
+    },
+    "HUB_CHE_01": {
+      "city": "Chennai",
+      "status": "ACTIVE",
+      "capacity": 393
+    },
+    "HUB_KOL_01": {
+      "city": "Kolkata",
+      "status": "ACTIVE",
+      "capacity": 428
+    },
+    "HUB_PUN_01": {
+      "city": "Pune",
+      "status": "ACTIVE",
+      "capacity": 395
+    },
+    "HUB_AHM_01": {
+      "city": "Ahmedabad",
+      "status": "ACTIVE",
+      "capacity": 517
+    },
+    "HUB_JAI_01": {
+      "city": "Jaipur",
+      "status": "ACTIVE",
+      "capacity": 219
+    },
+    "HUB_LUC_01": {
+      "city": "Lucknow",
+      "status": "CLOSED",
+      "capacity": 716
+    }
+  },
+  "zones": {
+    "MUM_ZONE_1": {
+      "city": "Mumbai",
+      "hub_id": "HUB_MUM_01",
+      "status": "INACTIVE",
+      "active_workers": 32
+    },
+    "MUM_ZONE_2": {
+      "city": "Mumbai",
+      "hub_id": "HUB_MUM_01",
+      "status": "ACTIVE",
+      "active_workers": 18
+    },
+    "MUM_ZONE_3": {
+      "city": "Mumbai",
+      "hub_id": "HUB_MUM_01",
+      "status": "ACTIVE",
+      "active_workers": 23
+    },
+    "DEL_ZONE_1": {
+      "city": "Delhi",
+      "hub_id": "HUB_DEL_01",
+      "status": "ACTIVE",
+      "active_workers": 32
+    },
+    "DEL_ZONE_2": {
+      "city": "Delhi",
+      "hub_id": "HUB_DEL_01",
+      "status": "INACTIVE",
+      "active_workers": 48
+    },
+    "DEL_ZONE_3": {
+      "city": "Delhi",
+      "hub_id": "HUB_DEL_01",
+      "status": "ACTIVE",
+      "active_workers": 22
+    },
+    "BAN_ZONE_1": {
+      "city": "Bangalore",
+      "hub_id": "HUB_BAN_01",
+      "status": "ACTIVE",
+      "active_workers": 50
+    },
+    "BAN_ZONE_2": {
+      "city": "Bangalore",
+      "hub_id": "HUB_BAN_01",
+      "status": "INACTIVE",
+      "active_workers": 40
+    },
+    "BAN_ZONE_3": {
+      "city": "Bangalore",
+      "hub_id": "HUB_BAN_01",
+      "status": "ACTIVE",
+      "active_workers": 45
+    },
+    "HYD_ZONE_1": {
+      "city": "Hyderabad",
+      "hub_id": "HUB_HYD_01",
+      "status": "INACTIVE",
+      "active_workers": 49
+    },
+    "HYD_ZONE_2": {
+      "city": "Hyderabad",
+      "hub_id": "HUB_HYD_01",
+      "status": "ACTIVE",
+      "active_workers": 14
+    },
+    "HYD_ZONE_3": {
+      "city": "Hyderabad",
+      "hub_id": "HUB_HYD_01",
+      "status": "ACTIVE",
+      "active_workers": 33
+    },
+    "CHE_ZONE_1": {
+      "city": "Chennai",
+      "hub_id": "HUB_CHE_01",
+      "status": "ACTIVE",
+      "active_workers": 30
+    },
+    "CHE_ZONE_2": {
+      "city": "Chennai",
+      "hub_id": "HUB_CHE_01",
+      "status": "ACTIVE",
+      "active_workers": 34
+    },
+    "CHE_ZONE_3": {
+      "city": "Chennai",
+      "hub_id": "HUB_CHE_01",
+      "status": "ACTIVE",
+      "active_workers": 15
+    },
+    "KOL_ZONE_1": {
+      "city": "Kolkata",
+      "hub_id": "HUB_KOL_01",
+      "status": "INACTIVE",
+      "active_workers": 45
+    },
+    "KOL_ZONE_2": {
+      "city": "Kolkata",
+      "hub_id": "HUB_KOL_01",
+      "status": "ACTIVE",
+      "active_workers": 13
+    },
+    "KOL_ZONE_3": {
+      "city": "Kolkata",
+      "hub_id": "HUB_KOL_01",
+      "status": "ACTIVE",
+      "active_workers": 28
+    },
+    "PUN_ZONE_1": {
+      "city": "Pune",
+      "hub_id": "HUB_PUN_01",
+      "status": "ACTIVE",
+      "active_workers": 20
+    },
+    "PUN_ZONE_2": {
+      "city": "Pune",
+      "hub_id": "HUB_PUN_01",
+      "status": "INACTIVE",
+      "active_workers": 18
+    },
+    "PUN_ZONE_3": {
+      "city": "Pune",
+      "hub_id": "HUB_PUN_01",
+      "status": "ACTIVE",
+      "active_workers": 25
+    },
+    "AHM_ZONE_1": {
+      "city": "Ahmedabad",
+      "hub_id": "HUB_AHM_01",
+      "status": "ACTIVE",
+      "active_workers": 28
+    },
+    "AHM_ZONE_2": {
+      "city": "Ahmedabad",
+      "hub_id": "HUB_AHM_01",
+      "status": "ACTIVE",
+      "active_workers": 26
+    },
+    "AHM_ZONE_3": {
+      "city": "Ahmedabad",
+      "hub_id": "HUB_AHM_01",
+      "status": "ACTIVE",
+      "active_workers": 23
+    },
+    "JAI_ZONE_1": {
+      "city": "Jaipur",
+      "hub_id": "HUB_JAI_01",
+      "status": "ACTIVE",
+      "active_workers": 24
+    },
+    "JAI_ZONE_2": {
+      "city": "Jaipur",
+      "hub_id": "HUB_JAI_01",
+      "status": "INACTIVE",
+      "active_workers": 38
+    },
+    "JAI_ZONE_3": {
+      "city": "Jaipur",
+      "hub_id": "HUB_JAI_01",
+      "status": "INACTIVE",
+      "active_workers": 47
+    },
+    "LUC_ZONE_1": {
+      "city": "Lucknow",
+      "hub_id": "HUB_LUC_01",
+      "status": "INACTIVE",
+      "active_workers": 35
+    },
+    "LUC_ZONE_2": {
+      "city": "Lucknow",
+      "hub_id": "HUB_LUC_01",
+      "status": "INACTIVE",
+      "active_workers": 11
+    },
+    "LUC_ZONE_3": {
+      "city": "Lucknow",
+      "hub_id": "HUB_LUC_01",
+      "status": "ACTIVE",
+      "active_workers": 45
+    }
+  },
+  "batches": {
+    "W0001": {
+      "batch_id": "BATCH_6141",
+      "assigned_deliveries": 9,
+      "completed_deliveries": 8,
+      "gps_movement_score": 0.38
+    },
+    "W0002": {
+      "batch_id": "BATCH_1821",
+      "assigned_deliveries": 9,
+      "completed_deliveries": 2,
+      "gps_movement_score": 0.65
+    },
+    "W0003": {
+      "batch_id": "BATCH_8983",
+      "assigned_deliveries": 19,
+      "completed_deliveries": 9,
+      "gps_movement_score": 0.06
+    },
+    "W0004": {
+      "batch_id": "BATCH_5317",
+      "assigned_deliveries": 11,
+      "completed_deliveries": 1,
+      "gps_movement_score": 0.3
+    },
+    "W0005": {
+      "batch_id": "BATCH_6218",
+      "assigned_deliveries": 6,
+      "completed_deliveries": 4,
+      "gps_movement_score": 0.23
+    },
+    "W0006": {
+      "batch_id": "BATCH_7006",
+      "assigned_deliveries": 6,
+      "completed_deliveries": 5,
+      "gps_movement_score": 0.16
+    },
+    "W0007": {
+      "batch_id": "BATCH_5592",
+      "assigned_deliveries": 18,
+      "completed_deliveries": 12,
+      "gps_movement_score": 0.34
+    },
+    "W0008": {
+      "batch_id": "BATCH_8347",
+      "assigned_deliveries": 15,
+      "completed_deliveries": 5,
+      "gps_movement_score": 0.2
+    },
+    "W0009": {
+      "batch_id": "BATCH_3186",
+      "assigned_deliveries": 21,
+      "completed_deliveries": 4,
+      "gps_movement_score": 0.62
+    },
+    "W0010": {
+      "batch_id": "BATCH_4830",
+      "assigned_deliveries": 5,
+      "completed_deliveries": 4,
+      "gps_movement_score": 0.02
+    },
+    "W0011": {
+      "batch_id": "BATCH_6409",
+      "assigned_deliveries": 17,
+      "completed_deliveries": 3,
+      "gps_movement_score": 0.22
+    },
+    "W0012": {
+      "batch_id": "BATCH_1163",
+      "assigned_deliveries": 12,
+      "completed_deliveries": 0,
+      "gps_movement_score": 0.22
+    },
+    "W0013": {
+      "batch_id": "BATCH_5155",
+      "assigned_deliveries": 18,
+      "completed_deliveries": 14,
+      "gps_movement_score": 0.44
+    },
+    "W0014": {
+      "batch_id": "BATCH_3012",
+      "assigned_deliveries": 18,
+      "completed_deliveries": 14,
+      "gps_movement_score": 0.37
+    },
+    "W0015": {
+      "batch_id": "BATCH_1175",
+      "assigned_deliveries": 19,
+      "completed_deliveries": 13,
+      "gps_movement_score": 0.14
+    },
+    "W0016": {
+      "batch_id": "BATCH_8837",
+      "assigned_deliveries": 24,
+      "completed_deliveries": 11,
+      "gps_movement_score": 0.75
+    },
+    "W0017": {
+      "batch_id": "BATCH_6164",
+      "assigned_deliveries": 12,
+      "completed_deliveries": 1,
+      "gps_movement_score": 0.17
+    },
+    "W0018": {
+      "batch_id": "BATCH_7065",
+      "assigned_deliveries": 11,
+      "completed_deliveries": 1,
+      "gps_movement_score": 0.08
+    },
+    "W0019": {
+      "batch_id": "BATCH_3835",
+      "assigned_deliveries": 12,
+      "completed_deliveries": 8,
+      "gps_movement_score": 0.82
+    },
+    "W0020": {
+      "batch_id": "BATCH_3795",
+      "assigned_deliveries": 12,
+      "completed_deliveries": 0,
+      "gps_movement_score": 0.22
+    }
+  }
+}

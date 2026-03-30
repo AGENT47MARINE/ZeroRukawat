@@ -1,0 +1,42 @@
+{
+  "Mumbai": {
+    "aqi": 250,
+    "category": "poor"
+  },
+  "Delhi": {
+    "aqi": 180,
+    "category": "moderate"
+  },
+  "Bangalore": {
+    "aqi": 250,
+    "category": "poor"
+  },
+  "Hyderabad": {
+    "aqi": 80,
+    "category": "satisfactory"
+  },
+  "Chennai": {
+    "aqi": 120,
+    "category": "moderate"
+  },
+  "Kolkata": {
+    "aqi": 400,
+    "category": "severe"
+  },
+  "Pune": {
+    "aqi": 320,
+    "category": "severe"
+  },
+  "Ahmedabad": {
+    "aqi": 120,
+    "category": "moderate"
+  },
+  "Jaipur": {
+    "aqi": 320,
+    "category": "severe"
+  },
+  "Lucknow": {
+    "aqi": 80,
+    "category": "satisfactory"
+  }
+}
