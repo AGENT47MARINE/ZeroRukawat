@@ -1,267 +1,265 @@
 {
   "Mumbai": {
     "MUM_ZONE_1": {
-      "risk_score": 0.41,
-      "avg_disruptions_per_month": 8,
+      "risk_score": 0.61,
+      "avg_disruptions_per_month": 5,
       "common_types": [
-        "severe_aqi",
-        "dense_fog",
-        "heavy_rain"
+        "extreme_heat",
+        "curfew",
+        "severe_aqi"
       ]
     },
     "MUM_ZONE_2": {
-      "risk_score": 0.49,
-      "avg_disruptions_per_month": 4,
+      "risk_score": 0.28,
+      "avg_disruptions_per_month": 2,
       "common_types": [
-        "dense_fog",
+        "curfew",
+        "extreme_heat",
         "severe_aqi"
       ]
     },
     "MUM_ZONE_3": {
-      "risk_score": 0.68,
-      "avg_disruptions_per_month": 1,
+      "risk_score": 0.26,
+      "avg_disruptions_per_month": 2,
       "common_types": [
-        "curfew",
-        "dense_fog"
+        "heavy_rain",
+        "dense_fog",
+        "curfew"
       ]
     }
   },
   "Delhi": {
     "DEL_ZONE_1": {
-      "risk_score": 0.22,
-      "avg_disruptions_per_month": 7,
+      "risk_score": 0.66,
+      "avg_disruptions_per_month": 6,
       "common_types": [
-        "dense_fog"
+        "dense_fog",
+        "curfew",
+        "warehouse_strike"
       ]
     },
     "DEL_ZONE_2": {
-      "risk_score": 0.42,
-      "avg_disruptions_per_month": 4,
+      "risk_score": 0.3,
+      "avg_disruptions_per_month": 5,
       "common_types": [
-        "extreme_heat",
         "heavy_rain"
       ]
     },
     "DEL_ZONE_3": {
-      "risk_score": 0.61,
-      "avg_disruptions_per_month": 7,
+      "risk_score": 0.33,
+      "avg_disruptions_per_month": 5,
       "common_types": [
-        "warehouse_strike",
-        "severe_aqi"
+        "heavy_rain",
+        "curfew",
+        "dense_fog"
       ]
     }
   },
   "Bangalore": {
     "BAN_ZONE_1": {
-      "risk_score": 0.63,
-      "avg_disruptions_per_month": 8,
+      "risk_score": 0.34,
+      "avg_disruptions_per_month": 4,
       "common_types": [
-        "heavy_rain",
+        "severe_aqi",
         "curfew"
       ]
     },
     "BAN_ZONE_2": {
-      "risk_score": 0.82,
+      "risk_score": 0.22,
       "avg_disruptions_per_month": 6,
       "common_types": [
-        "warehouse_strike"
+        "warehouse_strike",
+        "curfew"
       ]
     },
     "BAN_ZONE_3": {
-      "risk_score": 0.69,
-      "avg_disruptions_per_month": 4,
+      "risk_score": 0.62,
+      "avg_disruptions_per_month": 5,
       "common_types": [
-        "extreme_heat",
-        "heavy_rain"
+        "zone_closure",
+        "dense_fog",
+        "severe_aqi"
       ]
     }
   },
   "Hyderabad": {
     "HYD_ZONE_1": {
-      "risk_score": 0.69,
-      "avg_disruptions_per_month": 8,
-      "common_types": [
-        "heavy_rain",
-        "extreme_heat",
-        "dense_fog"
-      ]
-    },
-    "HYD_ZONE_2": {
-      "risk_score": 0.44,
+      "risk_score": 0.5,
       "avg_disruptions_per_month": 3,
       "common_types": [
-        "extreme_heat",
-        "severe_aqi",
+        "heavy_rain",
+        "curfew",
         "zone_closure"
       ]
     },
-    "HYD_ZONE_3": {
-      "risk_score": 0.67,
-      "avg_disruptions_per_month": 7,
+    "HYD_ZONE_2": {
+      "risk_score": 0.59,
+      "avg_disruptions_per_month": 5,
       "common_types": [
+        "zone_closure",
+        "heavy_rain",
+        "extreme_heat"
+      ]
+    },
+    "HYD_ZONE_3": {
+      "risk_score": 0.69,
+      "avg_disruptions_per_month": 2,
+      "common_types": [
+        "warehouse_strike",
         "extreme_heat",
-        "heavy_rain"
+        "zone_closure"
       ]
     }
   },
   "Chennai": {
     "CHE_ZONE_1": {
-      "risk_score": 0.8,
-      "avg_disruptions_per_month": 5,
+      "risk_score": 0.66,
+      "avg_disruptions_per_month": 8,
       "common_types": [
-        "warehouse_strike",
         "curfew",
-        "zone_closure"
+        "dense_fog",
+        "heavy_rain"
       ]
     },
     "CHE_ZONE_2": {
-      "risk_score": 0.73,
+      "risk_score": 0.3,
       "avg_disruptions_per_month": 7,
       "common_types": [
-        "dense_fog",
-        "severe_aqi"
+        "heavy_rain"
       ]
     },
     "CHE_ZONE_3": {
-      "risk_score": 0.66,
-      "avg_disruptions_per_month": 4,
+      "risk_score": 0.57,
+      "avg_disruptions_per_month": 2,
       "common_types": [
         "dense_fog",
-        "curfew"
+        "zone_closure"
       ]
     }
   },
   "Kolkata": {
     "KOL_ZONE_1": {
-      "risk_score": 0.81,
-      "avg_disruptions_per_month": 5,
+      "risk_score": 0.43,
+      "avg_disruptions_per_month": 3,
       "common_types": [
         "extreme_heat",
-        "dense_fog",
-        "zone_closure"
+        "dense_fog"
       ]
     },
     "KOL_ZONE_2": {
-      "risk_score": 0.75,
-      "avg_disruptions_per_month": 5,
+      "risk_score": 0.65,
+      "avg_disruptions_per_month": 4,
       "common_types": [
-        "heavy_rain",
-        "severe_aqi",
-        "warehouse_strike"
+        "dense_fog",
+        "extreme_heat"
       ]
     },
     "KOL_ZONE_3": {
-      "risk_score": 0.85,
+      "risk_score": 0.87,
       "avg_disruptions_per_month": 4,
       "common_types": [
-        "extreme_heat",
-        "zone_closure",
-        "dense_fog"
+        "severe_aqi",
+        "heavy_rain"
       ]
     }
   },
   "Pune": {
     "PUN_ZONE_1": {
-      "risk_score": 0.39,
-      "avg_disruptions_per_month": 8,
+      "risk_score": 0.21,
+      "avg_disruptions_per_month": 2,
       "common_types": [
-        "extreme_heat",
         "warehouse_strike"
       ]
     },
     "PUN_ZONE_2": {
-      "risk_score": 0.82,
-      "avg_disruptions_per_month": 7,
+      "risk_score": 0.27,
+      "avg_disruptions_per_month": 3,
       "common_types": [
-        "heavy_rain",
-        "warehouse_strike"
+        "zone_closure",
+        "dense_fog",
+        "heavy_rain"
       ]
     },
     "PUN_ZONE_3": {
-      "risk_score": 0.73,
-      "avg_disruptions_per_month": 3,
+      "risk_score": 0.58,
+      "avg_disruptions_per_month": 7,
       "common_types": [
-        "extreme_heat"
+        "zone_closure"
       ]
     }
   },
   "Ahmedabad": {
     "AHM_ZONE_1": {
-      "risk_score": 0.23,
+      "risk_score": 0.32,
       "avg_disruptions_per_month": 6,
       "common_types": [
-        "severe_aqi",
-        "extreme_heat",
-        "warehouse_strike"
+        "warehouse_strike",
+        "heavy_rain"
       ]
     },
     "AHM_ZONE_2": {
-      "risk_score": 0.71,
-      "avg_disruptions_per_month": 4,
+      "risk_score": 0.4,
+      "avg_disruptions_per_month": 7,
       "common_types": [
-        "zone_closure",
-        "warehouse_strike",
-        "curfew"
+        "heavy_rain"
       ]
     },
     "AHM_ZONE_3": {
-      "risk_score": 0.61,
-      "avg_disruptions_per_month": 5,
+      "risk_score": 0.24,
+      "avg_disruptions_per_month": 3,
       "common_types": [
-        "extreme_heat"
+        "heavy_rain"
       ]
     }
   },
   "Jaipur": {
     "JAI_ZONE_1": {
-      "risk_score": 0.31,
-      "avg_disruptions_per_month": 1,
+      "risk_score": 0.39,
+      "avg_disruptions_per_month": 7,
       "common_types": [
-        "severe_aqi",
-        "extreme_heat",
         "heavy_rain"
       ]
     },
     "JAI_ZONE_2": {
-      "risk_score": 0.68,
-      "avg_disruptions_per_month": 2,
+      "risk_score": 0.26,
+      "avg_disruptions_per_month": 4,
       "common_types": [
-        "curfew",
+        "extreme_heat",
+        "severe_aqi",
         "heavy_rain"
       ]
     },
     "JAI_ZONE_3": {
-      "risk_score": 0.54,
-      "avg_disruptions_per_month": 5,
+      "risk_score": 0.22,
+      "avg_disruptions_per_month": 3,
       "common_types": [
-        "dense_fog",
-        "extreme_heat",
-        "curfew"
+        "extreme_heat"
       ]
     }
   },
   "Lucknow": {
     "LUC_ZONE_1": {
-      "risk_score": 0.64,
+      "risk_score": 0.6,
       "avg_disruptions_per_month": 7,
       "common_types": [
-        "dense_fog",
-        "severe_aqi"
+        "dense_fog"
       ]
     },
     "LUC_ZONE_2": {
-      "risk_score": 0.76,
-      "avg_disruptions_per_month": 3,
-      "common_types": [
-        "heavy_rain"
-      ]
-    },
-    "LUC_ZONE_3": {
-      "risk_score": 0.37,
+      "risk_score": 0.26,
       "avg_disruptions_per_month": 1,
       "common_types": [
         "dense_fog",
-        "warehouse_strike"
+        "warehouse_strike",
+        "curfew"
+      ]
+    },
+    "LUC_ZONE_3": {
+      "risk_score": 0.21,
+      "avg_disruptions_per_month": 7,
+      "common_types": [
+        "curfew",
+        "dense_fog"
       ]
     }
   }

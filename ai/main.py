@@ -5,6 +5,7 @@ Loads all trained models at startup, exposes 5 API endpoints.
 
 import sys
 import os
+import json
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException
@@ -143,7 +144,6 @@ async def disruption_status(zone: str):
     hub_id = zone_info.get("hub_id", f"HUB_{zone_prefix}_01")
     hub_info = platform_service.get_hub_status(hub_id)
 
-    import json
     aqi_path = os.path.join(os.path.dirname(__file__), "data", "mock_aqi.json")
     with open(aqi_path) as f:
         aqi_data = json.load(f)

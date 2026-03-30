@@ -7,6 +7,7 @@ Orchestrates the full payout pipeline:
 import os
 import json
 import random
+import pandas as pd
 from datetime import datetime
 
 from models.disruption_detector import DisruptionDetector
@@ -21,6 +22,29 @@ def _load_mock_aqi() -> dict:
     path = os.path.join(DATA_DIR, "mock_aqi.json")
     with open(path) as f:
         return json.load(f)
+
+
+def _load_worker_profiles() -> dict:
+    """FIX #5: Load worker profiles from CSV for deterministic lookups."""
+    path = os.path.join(DATA_DIR, "synthetic_workers.csv")
+    df = pd.read_csv(path)
+    return {row["worker_id"]: row.to_dict() for _, row in df.iterrows()}
+
+
+def _load_latest_earnings() -> dict:
+    """FIX #5: Load latest earnings per worker from batch history."""
+    path = os.path.join(DATA_DIR, "synthetic_batch_history.csv")
+    df = pd.read_csv(path)
+    # Get the latest avg_weekly_earnings_4w per worker
+    latest = df.sort_values("date").groupby("worker_id").last().reset_index()
+    return {
+        row["worker_id"]: {
+            "avg_weekly_earnings_4w": row["avg_weekly_earnings_4w"],
+            "zone_demand_factor": row["zone_demand_factor"],
+            "seasonal_multiplier": row["seasonal_multiplier"],
+        }
+        for _, row in latest.iterrows()
+    }
 
 
 # ── Razorpay stub ──────────────────────────────────────────────────────
@@ -49,6 +73,8 @@ class PayoutService:
         self.fraud_detector = fraud_detector
         self.income_estimator = income_estimator
         self.aqi_data = _load_mock_aqi()
+        self.worker_profiles = _load_worker_profiles()
+        self.worker_earnings = _load_latest_earnings()
 
     async def process_payout(self, worker_id: str, zone: str, city: str,
                               disrupted_days: int = 1,
@@ -138,14 +164,19 @@ class PayoutService:
                                  "score": fraud_result["fraud_score"]})
 
         # ── Step 5: Income estimation ─────────────────────────────────
-        # Mock worker earnings (in production, fetched from DB)
-        tier = random.choice([0, 1, 2])  # Mock — in prod, from worker profile
+        # FIX #5: Load tier and earnings from worker profiles, not random
+        worker_profile = self.worker_profiles.get(worker_id, {})
+        worker_earn = self.worker_earnings.get(worker_id, {})
+
+        tier = int(worker_profile.get("tier", 1))
+        avg_earnings = float(worker_earn.get("avg_weekly_earnings_4w", 5000.0))
+
         income_features = {
-            "avg_weekly_earnings_4w": random.uniform(3000, 8000),
+            "avg_weekly_earnings_4w": avg_earnings,
             "tier": tier,
             "day_of_week": datetime.now().weekday(),
-            "zone_demand_factor": random.uniform(0.8, 1.3),
-            "seasonal_multiplier": random.uniform(0.8, 1.2),
+            "zone_demand_factor": float(worker_earn.get("zone_demand_factor", 1.0)),
+            "seasonal_multiplier": float(worker_earn.get("seasonal_multiplier", 1.0)),
         }
 
         payout_result = self.income_estimator.predict(income_features, disrupted_days)

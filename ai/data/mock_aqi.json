@@ -1,42 +1,42 @@
 {
   "Mumbai": {
-    "aqi": 250,
-    "category": "poor"
+    "aqi": 120,
+    "category": "moderate"
   },
   "Delhi": {
+    "aqi": 400,
+    "category": "severe"
+  },
+  "Bangalore": {
     "aqi": 180,
     "category": "moderate"
   },
-  "Bangalore": {
-    "aqi": 250,
-    "category": "poor"
-  },
   "Hyderabad": {
-    "aqi": 80,
-    "category": "satisfactory"
+    "aqi": 180,
+    "category": "moderate"
   },
   "Chennai": {
-    "aqi": 120,
-    "category": "moderate"
+    "aqi": 250,
+    "category": "poor"
   },
   "Kolkata": {
     "aqi": 400,
     "category": "severe"
   },
   "Pune": {
-    "aqi": 320,
-    "category": "severe"
+    "aqi": 80,
+    "category": "satisfactory"
   },
   "Ahmedabad": {
-    "aqi": 120,
+    "aqi": 180,
     "category": "moderate"
   },
   "Jaipur": {
-    "aqi": 320,
+    "aqi": 400,
     "category": "severe"
   },
   "Lucknow": {
-    "aqi": 80,
-    "category": "satisfactory"
+    "aqi": 120,
+    "category": "moderate"
   }
 }

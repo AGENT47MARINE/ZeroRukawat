@@ -43,7 +43,7 @@ def _generate_event_id(zone: str, disruption_type: str) -> str:
         "curfew": "CURFEW",
     }.get(disruption_type, "UNK")
 
-    return f"{zone}_{now.strftime('%Y%m%d')}_{type_short}_{now.strftime('%H%M')}"
+    return f"{zone}_{now.strftime('%Y%m%d')}_{type_short}_{now.strftime('%H%M%S')}"
 
 
 class DisruptionDetector:

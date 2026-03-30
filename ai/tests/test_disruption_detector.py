@@ -88,14 +88,14 @@ class TestEventId:
     def test_event_id_format(self, detector):
         result = detector.check_single("MUM_ZONE_1", _base_data(rainfall=20.0))
         event_id = result["event_id"]
-        # Format: MUM_ZONE_1_YYYYMMDD_RAIN_HHMM
+        # Format: MUM_ZONE_1_YYYYMMDD_RAIN_HHMMSS
         parts = event_id.split("_")
         assert parts[0] == "MUM"
         assert parts[1] == "ZONE"
         assert parts[2] == "1"
         assert len(parts[3]) == 8  # YYYYMMDD
         assert parts[4] == "RAIN"
-        assert len(parts[5]) == 4  # HHMM
+        assert len(parts[5]) == 6  # HHMMSS
 
     def test_boundary_no_trigger(self, detector):
         """Exactly at threshold should NOT trigger (> not >=)."""

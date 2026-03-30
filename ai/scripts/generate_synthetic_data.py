@@ -42,11 +42,11 @@ def generate_workers(n=200):
         seasonal = round(random.uniform(0.8, 1.2), 2)
         weeks = random.randint(4, 104)
 
-        # Tier depends on activity + zone risk + claims (heuristic labels)
-        score = activity * 0.4 - claims * 3 + zone_risk * 10 + weeks * 0.1
-        if score > 30:
+        # FIX #3: Rebalanced tier thresholds → ~40% Bronze / 35% Silver / 25% Gold
+        score = activity * 0.4 - claims * 2 + zone_risk * 8 + weeks * 0.15
+        if score > 28:
             tier = 2   # Gold
-        elif score > 18:
+        elif score > 20:
             tier = 1   # Silver
         else:
             tier = 0   # Bronze
@@ -63,9 +63,11 @@ def generate_workers(n=200):
         })
 
     df = pd.DataFrame(rows)
+    dist = df["tier"].value_counts().sort_index()
     path = os.path.join(DATA_DIR, "synthetic_workers.csv")
     df.to_csv(path, index=False)
     print(f"✓ {path}  ({len(df)} workers)")
+    print(f"  Tier distribution: Bronze={dist.get(0,0)} Silver={dist.get(1,0)} Gold={dist.get(2,0)}")
     return df
 
 
@@ -77,7 +79,7 @@ def generate_batch_history(workers_df, days=28):
     start = datetime(2025, 2, 1)
 
     for _, w in workers_df.iterrows():
-        weekly_earnings = []
+        daily_earnings_list = []
         for d in range(days):
             date = start + timedelta(days=d)
             dow = date.weekday()
@@ -87,14 +89,23 @@ def generate_batch_history(workers_df, days=28):
             demand = round(random.uniform(0.8, 1.3), 2)
             seasonal = round(random.uniform(0.8, 1.2), 2)
 
-            daily = round(base * demand * seasonal + random.gauss(0, 50), 2)
+            # FIX #9: Weekend earnings boost (15-20%)
+            weekend_mult = 1.0
+            if dow in (5, 6):  # Saturday, Sunday
+                weekend_mult = round(random.uniform(1.15, 1.20), 2)
+
+            daily = round(base * demand * seasonal * weekend_mult + random.gauss(0, 50), 2)
             daily = max(daily, 100)  # floor
 
-            weekly_earnings.append(daily)
+            # FIX #2: avg_weekly_earnings_4w uses only PREVIOUS days (exclude current day)
+            # This prevents data leakage where the target is embedded in the feature
+            if len(daily_earnings_list) > 0:
+                window = daily_earnings_list[-28:]  # last 28 days, excluding today
+                avg_4w = round(np.mean(window), 2)
+            else:
+                avg_4w = round(daily * 0.95, 2)  # first day: slight underestimate
 
-            # Rolling 4-week avg (use what we have so far)
-            window = weekly_earnings[-28:] if len(weekly_earnings) >= 28 else weekly_earnings
-            avg_4w = round(np.mean(window), 2)
+            daily_earnings_list.append(daily)
 
             rows.append({
                 "worker_id": w["worker_id"],
@@ -210,6 +221,41 @@ def generate_mock_platform():
 
 
 # ═══════════════════════════════════════════════════════════════════════════
+# 6. synthetic_fraud_training.csv  (FIX #4: fraud detector training data)
+# ═══════════════════════════════════════════════════════════════════════════
+def generate_fraud_training():
+    rows = []
+
+    # 150 normal workers: idle during disruption
+    for i in range(150):
+        rows.append({
+            "gps_movement_score": round(random.uniform(0.0, 0.3), 3),
+            "deliveries_in_window": 0,
+            "claim_frequency_7d": random.randint(0, 2),
+            "zone_traffic_clear": 0,
+            "is_duplicate_event": 0,
+            "label": "normal",
+        })
+
+    # 50 fraudulent workers: suspicious patterns
+    for i in range(50):
+        rows.append({
+            "gps_movement_score": round(random.uniform(0.5, 1.0), 3),
+            "deliveries_in_window": random.randint(1, 10),
+            "claim_frequency_7d": random.randint(3, 8),
+            "zone_traffic_clear": random.choice([0, 0, 1, 1, 1]),
+            "is_duplicate_event": random.choice([0, 0, 0, 1]),
+            "label": "fraud",
+        })
+
+    df = pd.DataFrame(rows)
+    path = os.path.join(DATA_DIR, "synthetic_fraud_training.csv")
+    df.to_csv(path, index=False)
+    print(f"✓ {path}  ({len(df)} samples: 150 normal + 50 fraud)")
+    return df
+
+
+# ═══════════════════════════════════════════════════════════════════════════
 # Main
 # ═══════════════════════════════════════════════════════════════════════════
 if __name__ == "__main__":
@@ -219,4 +265,5 @@ if __name__ == "__main__":
     generate_disruption_history()
     generate_mock_aqi()
     generate_mock_platform()
+    generate_fraud_training()
     print("\n✅ All data files generated in", DATA_DIR)

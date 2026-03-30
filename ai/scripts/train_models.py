@@ -44,12 +44,12 @@ def train_risk_scorer():
 
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
+    # FIX #11: Removed deprecated use_label_encoder parameter
     model = XGBClassifier(
         n_estimators=100,
         max_depth=4,
         learning_rate=0.1,
         random_state=42,
-        use_label_encoder=False,
         eval_metric="mlogloss",
     )
     model.fit(X_train, y_train)
@@ -73,32 +73,24 @@ def train_fraud_detector():
     print("Training Fraud Detector (Isolation Forest)")
     print("=" * 60)
 
-    np.random.seed(42)
+    # FIX #4: Load training data from CSV instead of hardcoding
+    csv_path = os.path.join(DATA_DIR, "synthetic_fraud_training.csv")
+    df = pd.read_csv(csv_path)
 
-    # Generate training data: 150 normal + 50 fraudulent workers
-    # Normal workers: idle during disruption (low GPS, 0 deliveries, low claims)
-    normal = np.column_stack([
-        np.random.uniform(0.0, 0.3, 150),   # gps_movement_score (low = idle)
-        np.zeros(150),                        # deliveries_in_window (0 during disruption)
-        np.random.randint(0, 3, 150),         # claim_frequency_7d (reasonable)
-        np.zeros(150),                        # zone_traffic_clear (False)
-        np.zeros(150),                        # is_duplicate_event (False)
-    ])
+    feature_cols = ["gps_movement_score", "deliveries_in_window",
+                     "claim_frequency_7d", "zone_traffic_clear", "is_duplicate_event"]
+    X_train = df[feature_cols].values
 
-    # Fraudulent workers: suspicious patterns
-    fraudulent = np.column_stack([
-        np.random.uniform(0.5, 1.0, 50),     # gps_movement_score (active = suspicious)
-        np.random.randint(1, 10, 50),         # deliveries_in_window (making deliveries!)
-        np.random.randint(3, 8, 50),          # claim_frequency_7d (very frequent)
-        np.random.choice([0, 1], 50, p=[0.3, 0.7]),  # zone_traffic_clear (often True)
-        np.random.choice([0, 1], 50, p=[0.7, 0.3]),  # is_duplicate_event (sometimes)
-    ])
+    n_fraud = (df["label"] == "fraud").sum()
+    n_total = len(df)
+    contamination = n_fraud / n_total
 
-    X_train = np.vstack([normal, fraudulent])
+    print(f"Training samples: {n_total} ({n_total - n_fraud} normal + {n_fraud} fraud)")
+    print(f"Contamination: {contamination:.2%}")
 
     model = IsolationForest(
         n_estimators=100,
-        contamination=0.25,  # 50/200 = 25%
+        contamination=contamination,
         random_state=42,
     )
     model.fit(X_train)
@@ -106,11 +98,13 @@ def train_fraud_detector():
     # Validate on training data
     predictions = model.predict(X_train)  # 1 = normal, -1 = anomaly
     n_anomalies = (predictions == -1).sum()
-    print(f"Detected {n_anomalies}/{len(X_train)} anomalies ({n_anomalies/len(X_train)*100:.1f}%)")
+    print(f"Detected {n_anomalies}/{n_total} anomalies ({n_anomalies/n_total*100:.1f}%)")
 
-    # Quick sanity: score a known-good and known-bad sample
-    good_score = model.decision_function(normal[:1])[0]
-    bad_score = model.decision_function(fraudulent[:1])[0]
+    # Sanity: score a known-good and known-bad sample
+    normal_rows = df[df["label"] == "normal"]
+    fraud_rows = df[df["label"] == "fraud"]
+    good_score = model.decision_function(normal_rows[feature_cols].values[:1])[0]
+    bad_score = model.decision_function(fraud_rows[feature_cols].values[:1])[0]
     print(f"Sample normal score: {good_score:.3f} (higher = more normal)")
     print(f"Sample fraud score:  {bad_score:.3f} (lower = more anomalous)")
 
@@ -129,6 +123,9 @@ def train_income_estimator():
 
     df = pd.read_csv(os.path.join(DATA_DIR, "synthetic_batch_history.csv"))
 
+    # FIX #1: Clamp training target floor at Rs 100 to prevent negative predictions
+    df["daily_earnings"] = df["daily_earnings"].clip(lower=100)
+
     features = ["avg_weekly_earnings_4w", "tier", "day_of_week",
                  "zone_demand_factor", "seasonal_multiplier"]
     X = df[features].values
@@ -145,6 +142,11 @@ def train_income_estimator():
     print(f"MAE:  Rs {mae:.2f}")
     print(f"R²:   {r2:.3f}")
 
+    # Sanity: check that extreme-low predictions are reasonable
+    X_extreme = np.array([[100.0, 0, 0, 0.1, 0.1]])
+    extreme_pred = model.predict(X_extreme)[0]
+    print(f"Extreme-low test prediction: Rs {extreme_pred:.2f} (floored to 100 at runtime)")
+
     path = os.path.join(ARTIFACTS_DIR, "income_estimator.joblib")
     joblib.dump(model, path)
     print(f"✓ Saved: {path}\n")
@@ -158,7 +160,8 @@ if __name__ == "__main__":
     print("Training all models …\n")
 
     # Check data files exist
-    for f in ["synthetic_workers.csv", "synthetic_batch_history.csv"]:
+    required = ["synthetic_workers.csv", "synthetic_batch_history.csv", "synthetic_fraud_training.csv"]
+    for f in required:
         if not os.path.exists(os.path.join(DATA_DIR, f)):
             print(f"❌ Missing {f} — run generate_synthetic_data.py first!")
             sys.exit(1)
