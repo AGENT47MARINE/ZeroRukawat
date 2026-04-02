@@ -1,0 +1,32 @@
+{
+  "zones": {
+    "Mumbai_Kurla": {
+      "city": "Mumbai",
+      "rainfall": 18.5,
+      "temperature": 32,
+      "visibility": 500,
+      "aqi": 150
+    },
+    "Delhi_North": {
+      "city": "Delhi",
+      "rainfall": 0,
+      "temperature": 44.5,
+      "visibility": 800,
+      "aqi": 280
+    },
+    "Bangalore_South": {
+      "city": "Bangalore",
+      "rainfall": 5.0,
+      "temperature": 28,
+      "visibility": 2000,
+      "aqi": 100
+    },
+    "Chennai_Central": {
+      "city": "Chennai",
+      "rainfall": 2.0,
+      "temperature": 38,
+      "visibility": 1500,
+      "aqi": 120
+    }
+  }
+}

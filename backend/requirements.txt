@@ -1,13 +1,16 @@
-fastapi
-uvicorn[standard]
-sqlalchemy
-alembic
-psycopg2-binary
-pydantic
+flask
+flask-sqlalchemy
+flask-migrate
+flask-cors
+flask-jwt-extended
 python-dotenv
-celery
-redis
-scikit-learn
-joblib
-pandas
+apscheduler
 requests
+twilio
+pytest
+pytest-flask
+# werkzeug is bundled with flask — no extra install needed
+# Production (swap in when deploying):
+# psycopg2-binary
+# celery[redis]
+# redis
