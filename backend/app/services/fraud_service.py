@@ -10,15 +10,45 @@ def _ai_url() -> str:
     return current_app.config.get('AI_SERVER_URL', 'http://localhost:5001')
 
 
-def check_disruption(zone: str) -> dict:
-    """Call AI server: GET /disruption-status/{zone}"""
+def get_disruption_status(zone: str) -> dict:
+    """Call AI server: GET /disruption-status/{zone}."""
     try:
         resp = requests.get(f"{_ai_url()}/disruption-status/{zone}", timeout=5)
         resp.raise_for_status()
         return resp.json()
     except Exception as e:
         current_app.logger.warning(f"[FraudSvc] AI disruption check failed for {zone}: {e}")
-        return {'triggered': False, 'error': str(e)}
+        return {
+            'zone': zone,
+            'zone_data': {},
+            'disruptions': [{'triggered': False, 'type': None, 'event_id': None, 'zone': zone}],
+            'fallback': True,
+            'error': str(e),
+        }
+
+
+def get_risk_score(worker_id: str, payload: dict) -> dict:
+    """Call AI server: POST /risk-score/{worker_id}."""
+    try:
+        resp = requests.post(f"{_ai_url()}/risk-score/{worker_id}", json=payload, timeout=5)
+        resp.raise_for_status()
+        return resp.json()
+    except Exception as e:
+        current_app.logger.warning(f"[FraudSvc] AI risk score failed for {worker_id}: {e}")
+        return {
+            'tier': 1,
+            'tier_label': 'Silver',
+            'base_premium': 79,
+            'adjusted_premium': 79,
+            'city_factor': 1.0,
+            'fallback': True,
+            'error': str(e),
+        }
+
+
+def check_disruption(zone: str) -> dict:
+    """Call AI server: GET /disruption-status/{zone}"""
+    return get_disruption_status(zone)
 
 
 def validate_claim(worker_id: str, event_id: str, gps_movement_score: float,

@@ -30,6 +30,7 @@ coverage.xml
 backend/weather_api_response.txt
 backend/test_weather_api.py
 backend/twilio_setup.py
+implementation.md
 
 # ML Data & Models
 ai-ml/data/*

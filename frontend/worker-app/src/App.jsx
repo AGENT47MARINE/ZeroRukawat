@@ -103,6 +103,7 @@ const App = () => {
   const [currentPolicy, setCurrentPolicy]         = useState(null);
   const [payouts, setPayouts]                     = useState([]);
   const [activeDisruptions, setActiveDisruptions] = useState([]);
+  const [workerInsights, setWorkerInsights]       = useState(null);
   const [tabLoading, setTabLoading]               = useState(false);
 
   // ─ Form state
@@ -120,10 +121,23 @@ const App = () => {
   // ─── Derived data (computed from real API responses — NO mock) ────────────
   const weeklyChart   = buildWeeklyChart(payouts);
   const totalPaid     = payouts.reduce((s, p) => s + (p.amount || 0), 0);
-  const riskInfo      = riskLabel(currentWorker?.risk_score ?? 0.5);
+  const aiRiskScore   = workerInsights?.risk?.score ?? currentWorker?.risk_score ?? 0.5;
+  const aiDisruption  = workerInsights?.disruption || null;
+  const riskInfo      = riskLabel(aiRiskScore);
   const workerInitials = currentWorker
     ? currentWorker.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
     : '--';
+
+  const loadWorkerInsights = async (jwt) => {
+    if (!jwt) return;
+    try {
+      const insightsResp = await api.getWorkerInsights(jwt);
+      setWorkerInsights(insightsResp.data || null);
+    } catch (e) {
+      console.error('Worker insights fetch:', e);
+      setWorkerInsights(null);
+    }
+  };
 
   // ─── Session restore on mount ──────────────────────────────────────────────
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -140,6 +154,7 @@ const App = () => {
         setPayouts(payResp.data || []);
         const disResp = await api.getActiveDisruptions();
         setActiveDisruptions(disResp.data || []);
+        await loadWorkerInsights(token);
         setScreen('dashboard');
       } catch {
         localStorage.removeItem('zr_token');
@@ -165,11 +180,17 @@ const App = () => {
   useEffect(() => {
     if (activeTab !== 'alerts') return;
     setTabLoading(true);
-    api.getActiveDisruptions()
-      .then(r  => setActiveDisruptions(r.data || []))
-      .catch(e  => console.error('Disruptions fetch:', e))
+    Promise.all([
+      api.getActiveDisruptions(),
+      token ? api.getWorkerInsights(token) : Promise.resolve(null),
+    ])
+      .then(([disResp, insightsResp]) => {
+        setActiveDisruptions(disResp?.data || []);
+        if (insightsResp?.data) setWorkerInsights(insightsResp.data);
+      })
+      .catch(e  => console.error('Disruptions/insights fetch:', e))
       .finally(() => setTabLoading(false));
-  }, [activeTab]);
+  }, [activeTab, token]);
 
   // ─── Fetch payouts when payouts tab is opened ─────────────────────────────
   useEffect(() => {
@@ -217,6 +238,7 @@ const App = () => {
       ]);
       setPayouts(payResp.data || []);
       setActiveDisruptions(disResp.data || []);
+      await loadWorkerInsights(jwt);
       setScreen('kyc');
     } catch (err) { setApiError(err.message); }
     finally { setLoading(false); }
@@ -225,6 +247,7 @@ const App = () => {
   const handleLogout = () => {
     localStorage.removeItem('zr_token');
     setToken(null); setCurrentWorker(null); setCurrentPolicy(null);
+    setWorkerInsights(null);
     setPayouts([]); setActiveDisruptions([]);
     setScreen('splash');
   };
@@ -457,8 +480,8 @@ const App = () => {
         {[
           { label: 'Zone',        val: currentWorker?.zone },
           { label: 'City',        val: currentWorker?.city },
-          { label: 'Tier',        val: currentWorker?.tier },
-          { label: 'Risk Score',  val: currentWorker?.risk_score?.toFixed(3) },
+          { label: 'Tier',        val: workerInsights?.risk?.tier_label || currentWorker?.tier },
+          { label: 'Risk Score',  val: aiRiskScore?.toFixed(3) },
           { label: 'Max Payout',  val: currentPolicy ? `₹${currentPolicy.max_payout?.toLocaleString('en-IN')}` : '—' },
         ].map(({ label, val }, i, arr) => (
           <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: i < arr.length - 1 ? '1px solid #f1f5f9' : 'none' }}>
@@ -503,9 +526,9 @@ const App = () => {
           <div className="card" style={{ borderLeft: `4px solid ${activeDisruptions.length > 0 ? '#ef4444' : '#10b981'}` }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
               <span style={{ fontSize: 13, fontWeight: 600 }}>Today's Status</span>
-              {activeDisruptions.length > 0 ? (
+              {(aiDisruption?.triggered || activeDisruptions.length > 0) ? (
                 <div style={{ display: 'flex', gap: 6, alignItems: 'center', color: '#ef4444' }}>
-                  <AlertTriangle size={16} /><span style={{ fontSize: 12, fontWeight: 700 }}>{activeDisruptions[0].type}</span>
+                  <AlertTriangle size={16} /><span style={{ fontSize: 12, fontWeight: 700 }}>{aiDisruption?.type || activeDisruptions[0]?.type}</span>
                 </div>
               ) : (
                 <div style={{ display: 'flex', gap: 6, alignItems: 'center', color: '#10b981' }}>
@@ -514,12 +537,12 @@ const App = () => {
               )}
             </div>
             <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-              Zone: {currentWorker?.zone ?? '—'} &nbsp;|&nbsp; Risk score: {currentWorker?.risk_score?.toFixed(2) ?? '0.50'}
+              Zone: {currentWorker?.zone ?? '—'} &nbsp;|&nbsp; Risk score: {aiRiskScore?.toFixed(2) ?? '0.50'}
             </div>
             <div style={{ marginTop: 15, paddingTop: 15, borderTop: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between' }}>
               <span style={{ fontSize: 12 }}>Payout Status:</span>
-              <span style={{ fontSize: 12, fontWeight: 700, color: activeDisruptions.length > 0 ? '#f59e0b' : 'var(--text-muted)' }}>
-                {activeDisruptions.length > 0 ? 'Processing...' : 'No payout today'}
+              <span style={{ fontSize: 12, fontWeight: 700, color: (aiDisruption?.triggered || activeDisruptions.length > 0) ? '#f59e0b' : 'var(--text-muted)' }}>
+                {(aiDisruption?.triggered || activeDisruptions.length > 0) ? 'Processing...' : 'No payout today'}
               </span>
             </div>
           </div>
@@ -619,11 +642,35 @@ const App = () => {
             <h3>Disruption Alerts</h3>
             <button onClick={() => {
               setTabLoading(true);
-              api.getActiveDisruptions().then(r => setActiveDisruptions(r.data || [])).finally(() => setTabLoading(false));
+              Promise.all([
+                api.getActiveDisruptions(),
+                token ? api.getWorkerInsights(token) : Promise.resolve(null),
+              ])
+                .then(([disResp, insightsResp]) => {
+                  setActiveDisruptions(disResp?.data || []);
+                  if (insightsResp?.data) setWorkerInsights(insightsResp.data);
+                })
+                .finally(() => setTabLoading(false));
             }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#4F46E5' }}>
               <RefreshCw size={18} />
             </button>
           </div>
+          {!tabLoading && aiDisruption?.triggered && (
+            <div className="card" style={{ borderLeft: '4px solid #f59e0b' }}>
+              <div style={{ display: 'flex', gap: 12 }}>
+                <AlertTriangle color="#f59e0b" size={24} />
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontWeight: 700, fontSize: 14 }}>AI Zone Alert</div>
+                  <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>
+                    {aiDisruption.type} in {aiDisruption.zone}
+                  </div>
+                  <div className="badge" style={{ background: '#fef3c7', color: '#b45309', marginTop: 8, display: 'inline-block' }}>
+                    LIVE AI DETECTION
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
           {tabLoading ? <Spinner /> : activeDisruptions.length === 0 ? (
             <div className="card" style={{ borderLeft: '4px solid #10b981' }}>
               <div style={{ display: 'flex', gap: 12 }}>
@@ -691,7 +738,7 @@ const App = () => {
               {[
                 { label: 'Zone',       val: currentWorker?.zone?.replace('_', '\n') ?? '—' },
                 { label: 'City',       val: currentWorker?.city ?? '—' },
-                { label: 'Risk Score', val: currentWorker?.risk_score?.toFixed(2) ?? '—' },
+                { label: 'Risk Score', val: aiRiskScore?.toFixed(2) ?? '—' },
               ].map((s, i) => (
                 <div key={i} style={{ textAlign: 'center' }}>
                   <div style={{ fontSize: 13, fontWeight: 800 }}>{s.val}</div>

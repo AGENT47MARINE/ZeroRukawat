@@ -26,12 +26,14 @@ def create_app(config_name='development'):
     from .disruptions import disruptions_bp
     from .claims      import claims_bp
     from .admin       import admin_bp
+    from .ai          import ai_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(workers_bp)
     app.register_blueprint(disruptions_bp)
     app.register_blueprint(claims_bp)
     app.register_blueprint(admin_bp)
+    app.register_blueprint(ai_bp)
 
     # ── Core routes ───────────────────────────────────────────────────────────
     @app.route('/')
