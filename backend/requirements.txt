@@ -6,6 +6,7 @@ flask-jwt-extended
 python-dotenv
 apscheduler
 requests
+twilio
 pytest
 pytest-flask
 # werkzeug is bundled with flask — no extra install needed

@@ -27,6 +27,9 @@ coverage.xml
 *,cover
 .hypothesis/
 .pytest_cache/
+backend/weather_api_response.txt
+backend/test_weather_api.py
+backend/twilio_setup.py
 
 # ML Data & Models
 ai-ml/data/*
