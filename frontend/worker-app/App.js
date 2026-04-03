@@ -42,7 +42,7 @@ const MethodSelect = () => {
   return (
     <Animated.View entering={FadeInUp} style={styles.onboardingContainer}>
       <Ionicons name="shield-half" size={80} color="#3B82F6" style={{ marginBottom: 20 }} />
-      <Text style={styles.onboardingTitle}>Welcome to GigShield</Text>
+      <Text style={styles.onboardingTitle}>Welcome to ZeroRukawat</Text>
       <Text style={styles.onboardingSub}>How would you like to continue your protection journey?</Text>
       <TouchableOpacity style={[styles.btnPrimary, { backgroundColor: '#25D366', marginTop: 30 }]} onPress={() => alert('Opening WhatsApp Bot...')}>
         <Ionicons name="logo-whatsapp" size={24} color="#fff" />
@@ -420,7 +420,7 @@ const ProfileTab = () => {
         <View style={styles.secKV}><Text style={styles.secK}>Disrupted Days</Text><Text style={styles.secV}>8</Text></View>
         <View style={styles.secKV}><Text style={styles.secK}>Payouts Received</Text><Text style={[styles.secV, { color: '#10B981' }]}>₹2,800</Text></View>
         <View style={{ backgroundColor: 'rgba(16,185,129,0.1)', padding: 12, borderRadius: 8, marginTop: 10 }}>
-          <Text style={{ color: '#10B981', textAlign: 'center', fontWeight: 'bold' }}>GigShield has saved you ₹2,800 this year</Text>
+          <Text style={{ color: '#10B981', textAlign: 'center', fontWeight: 'bold' }}>ZeroRukawat has saved you ₹2,800 this year</Text>
         </View>
       </View>
 

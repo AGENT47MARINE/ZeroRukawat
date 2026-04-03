@@ -7,6 +7,9 @@ import { useStore } from './store/useStore';
 import DashboardPage from './features/Dashboard/DashboardPage';
 import FraudQueuePage from './features/Fraud/FraudQueuePage';
 import DisruptionMapPage from './features/Map/DisruptionMapPage';
+import AnalyticsPage from './features/Analytics/AnalyticsPage';
+import LoginPage from './features/Auth/LoginPage';
+import { LogOut } from 'lucide-react';
 
 const Sidebar = () => {
   const location = useLocation();
@@ -25,7 +28,7 @@ const Sidebar = () => {
           <Zap size={18} className="text-white" />
         </div>
         <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-white/70">
-          GigShield
+          ZeroRukawat
         </span>
       </div>
       <nav className="flex-1 px-4 space-y-2 mt-4">
@@ -92,7 +95,7 @@ const Topbar = () => {
         </div>
       </div>
       
-      <div>
+      <div className="flex items-center space-x-4">
         <button 
           onClick={triggerSimulation}
           className="px-6 py-2.5 bg-risk/10 text-risk border border-risk/30 rounded-full font-semibold text-sm transition-all hover:bg-risk hover:text-white hover:shadow-lg hover:shadow-risk/30 flex items-center space-x-2 hover-lift"
@@ -100,12 +103,26 @@ const Topbar = () => {
           <Zap size={16} />
           <span>Simulate Storm Spike</span>
         </button>
+
+        <button 
+          onClick={() => useStore.getState().logout()}
+          className="p-2.5 bg-white/5 border border-white/10 rounded-full text-gray-400 font-semibold transition-all hover:bg-risk/10 hover:border-risk/30 hover:text-risk flex items-center justify-center hover-lift"
+          title="Sign Out"
+        >
+          <LogOut size={16} />
+        </button>
       </div>
     </header>
   );
 };
 
 function App() {
+  const { isAuthenticated } = useStore();
+
+  if (!isAuthenticated) {
+    return <LoginPage />;
+  }
+
   return (
     <BrowserRouter>
       <div className="flex h-screen overflow-hidden bg-darker">
@@ -117,7 +134,7 @@ function App() {
               <Route path="/" element={<DashboardPage />} />
               <Route path="/map" element={<DisruptionMapPage />} />
               <Route path="/fraud" element={<FraudQueuePage />} />
-              <Route path="/analytics" element={<div className="text-white p-10"><h2 className="text-2xl font-bold">Analytics Panel</h2><p className="text-gray-400 mt-2">Coming soon...</p></div>} />
+              <Route path="/analytics" element={<AnalyticsPage />} />
               <Route path="/settings" element={<div className="text-white p-10"><h2 className="text-2xl font-bold">System Configuration</h2><p className="text-gray-400 mt-2">Coming soon...</p></div>} />
             </Routes>
           </main>

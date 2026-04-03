@@ -1,6 +1,11 @@
 import { create } from 'zustand';
 
 export const useStore = create((set) => ({
+  // Auth state
+  isAuthenticated: false,
+  login: () => set({ isAuthenticated: true }),
+  logout: () => set({ isAuthenticated: false }),
+
   // System metrics
   systemHealth: 99.9,
   queueLength: 142,
