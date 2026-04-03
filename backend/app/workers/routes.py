@@ -8,6 +8,7 @@ from ..models import Worker, Policy, Claim, Disruption
 from ..utils.response import success, error
 from ..utils.auth_utils import token_required
 from ..services import fraud_service
+from ..services.claim_signal_service import build_fraud_features, derive_disrupted_days
 from ..services.payout_stage_service import (
     PAYOUT_STAGE_REQUESTED,
     PAYOUT_STAGE_FRAUD_CHECK,
@@ -31,7 +32,7 @@ def _event_id_for(disruption: Disruption) -> str:
     )
 
 
-def _upsert_active_disruption(worker: Worker) -> Disruption:
+def _get_or_create_ai_active_disruption(worker: Worker) -> Disruption | None:
     disruption = (
         Disruption.query
         .filter_by(zone=worker.zone, is_active=True)
@@ -41,11 +42,27 @@ def _upsert_active_disruption(worker: Worker) -> Disruption:
     if disruption:
         return disruption
 
+    ai_state = fraud_service.get_disruption_status(worker.zone)
+    active_disruption = next(
+        (d for d in (ai_state.get('disruptions') or []) if d.get('triggered')),
+        None,
+    )
+    if not active_disruption:
+        return None
+
+    actual_value = active_disruption.get('actual_value')
+    threshold = active_disruption.get('threshold')
+    threshold_value = (
+        f"actual={actual_value}, threshold={threshold}"
+        if actual_value is not None and threshold is not None
+        else 'AI Triggered'
+    )
+
     disruption = Disruption(
         id=str(uuid.uuid4()),
         zone=worker.zone,
-        type='Mock Disruption',
-        threshold_value='Demo Trigger',
+        type=active_disruption.get('type') or 'AI Detected Disruption',
+        threshold_value=threshold_value,
         start_time=datetime.utcnow(),
         is_active=True,
     )
@@ -132,9 +149,9 @@ def get_payouts(worker_id):
     return success(result)
 
 
-@workers_bp.route('/<worker_id>/payouts/mock-initiate', methods=['POST'])
+@workers_bp.route('/<worker_id>/payouts/initiate', methods=['POST'])
 @token_required
-def initiate_mock_payout(worker_id):
+def initiate_payout(worker_id):
     if g.current_user.id != worker_id and not g.current_user.is_admin:
         return error('Access denied', 403)
 
@@ -157,7 +174,9 @@ def initiate_mock_payout(worker_id):
     if disrupted_days < 1 or disrupted_days > 7:
         return error('disrupted_days must be between 1 and 7')
 
-    disruption = _upsert_active_disruption(worker)
+    disruption = _get_or_create_ai_active_disruption(worker)
+    if not disruption:
+        return error('No active disruption in your zone. Payout can only be initiated during a disruption.', 409)
 
     claim = Claim(
         id=str(uuid.uuid4()),
@@ -173,13 +192,14 @@ def initiate_mock_payout(worker_id):
 
     append_stage(claim, PAYOUT_STAGE_FRAUD_CHECK, 'Running fraud checks')
 
+    fraud_features = build_fraud_features(worker)
     fraud_result = fraud_service.validate_claim(
         worker_id=worker.id,
         event_id=_event_id_for(disruption),
-        gps_movement_score=0.05,
-        deliveries_in_window=0,
-        claim_frequency_7d=0,
-        zone_traffic_clear=False,
+        gps_movement_score=fraud_features['gps_movement_score'],
+        deliveries_in_window=fraud_features['deliveries_in_window'],
+        claim_frequency_7d=fraud_features['claim_frequency_7d'],
+        zone_traffic_clear=fraud_features['zone_traffic_clear'],
     )
     fraud_score = float(fraud_result.get('fraud_score', 0.45))
     risk_score = float(worker.risk_score if worker.risk_score is not None else fraud_score)
@@ -202,11 +222,13 @@ def initiate_mock_payout(worker_id):
 
     append_stage(claim, PAYOUT_STAGE_INCOME_ESTIMATION, 'Calculating eligible payout amount')
 
+    payout_days = disrupted_days or derive_disrupted_days(disruption.start_time, disruption.end_time)
+
     payout_result = fraud_service.process_full_payout(
         worker_id=worker.id,
         zone=disruption.zone,
         city=worker.city,
-        disrupted_days=disrupted_days,
+        disrupted_days=payout_days,
         upi_id=worker.upi_id,
         worker_phone=worker.phone,
         device_token='FCM_DEV_TOKEN',

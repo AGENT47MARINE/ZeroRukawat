@@ -11,6 +11,7 @@ import {
   BarChart, Bar, ResponsiveContainer, XAxis, Tooltip, Cell
 } from 'recharts';
 import { api } from './api';
+import './index.css';
 
 // ── Zone options ─────────────────────────────────────────────────────────────
 const VALID_ZONES = [
@@ -299,14 +300,14 @@ const App = () => {
     setScreen('splash');
   };
 
-  const handleMockPayout = async () => {
+  const handlePayoutInitiation = async () => {
     if (!currentWorker || !token) return;
 
     setPayoutActionLoading(true);
     setPayoutActionError('');
 
     try {
-      await api.initiateMockPayout(
+      await api.initiatePayout(
         currentWorker.id,
         { disrupted_days: 1 },
         token
@@ -685,7 +686,7 @@ const App = () => {
             </p>
 
             <button
-              onClick={handleMockPayout}
+              onClick={handlePayoutInitiation}
               className="btn btn-primary"
               disabled={payoutActionLoading || tabLoading}
               style={{
@@ -714,7 +715,7 @@ const App = () => {
             <div className="card" style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>
               <TrendingUp size={40} style={{ marginBottom: 12, opacity: 0.3 }} />
               <p style={{ fontSize: 14 }}>No payout records yet.</p>
-              <p style={{ fontSize: 12, marginTop: 4 }}>Initiate a mock payout to see stage progression and final status.</p>
+              <p style={{ fontSize: 12, marginTop: 4 }}>Initiate payout to see stage progression and final status.</p>
             </div>
           ) : payouts.map((p, i) => (
             <div key={i} className="card">

@@ -13,6 +13,14 @@ except Exception:  # pragma: no cover
 _otp_send_tracker: dict[str, datetime] = {}
 
 
+def _dev_otp_enabled() -> bool:
+    return bool(current_app.config.get('DEBUG') or current_app.config.get('TESTING'))
+
+
+def _dev_otp_code() -> str:
+    return str(current_app.config.get('DEV_OTP_CODE', '123456'))
+
+
 def normalize_phone(phone: str) -> str | None:
     if not phone:
         return None
@@ -62,9 +70,13 @@ def verify_otp(phone: str, otp: str) -> bool:
     verify_service_sid = current_app.config.get('TWILIO_VERIFY_SERVICE_SID')
 
     if not (account_sid and auth_token and verify_service_sid):
+        if _dev_otp_enabled():
+            return str(otp).strip() == _dev_otp_code()
         current_app.logger.error('Twilio Verify is not configured.')
         return False
     if Client is None:
+        if _dev_otp_enabled():
+            return str(otp).strip() == _dev_otp_code()
         current_app.logger.error('Twilio SDK is not installed but Twilio Verify is configured.')
         return False
 
@@ -79,6 +91,9 @@ def verify_otp(phone: str, otp: str) -> bool:
         )
         return check.status == 'approved'
     except Exception as exc:
+        if _dev_otp_enabled():
+            current_app.logger.warning('Twilio Verify check failed, using DEV OTP fallback: %s', exc)
+            return str(otp).strip() == _dev_otp_code()
         current_app.logger.exception('Twilio Verify check failed: %s', exc)
         return False
 
@@ -89,9 +104,16 @@ def send_otp_sms(phone: str, purpose: str) -> tuple[bool, str | None]:
     verify_service_sid = current_app.config.get('TWILIO_VERIFY_SERVICE_SID')
 
     if not (account_sid and auth_token and verify_service_sid):
+        if _dev_otp_enabled():
+            _mark_sent(phone, purpose)
+            current_app.logger.warning('Twilio not configured. Using DEV OTP fallback for %s', phone)
+            return True, f'dev-otp-{purpose}'
         current_app.logger.error('Twilio Verify is not configured.')
         return False, 'twilio-not-configured'
     if Client is None:
+        if _dev_otp_enabled():
+            _mark_sent(phone, purpose)
+            return True, f'dev-otp-{purpose}'
         current_app.logger.error('Twilio SDK is not installed but Twilio Verify is configured.')
         return False, 'twilio-sdk-missing'
 
@@ -107,6 +129,10 @@ def send_otp_sms(phone: str, purpose: str) -> tuple[bool, str | None]:
         _mark_sent(phone, purpose)
         return True, verification.sid
     except Exception as exc:
+        if _dev_otp_enabled():
+            _mark_sent(phone, purpose)
+            current_app.logger.warning('Twilio Verify send failed, using DEV OTP fallback: %s', exc)
+            return True, f'dev-otp-{purpose}'
         current_app.logger.exception('Twilio Verify send failed: %s', exc)
         return False, 'twilio-verify-send-failed'
 

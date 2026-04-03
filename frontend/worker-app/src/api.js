@@ -4,7 +4,13 @@
  * Open DevTools → Console to see all traffic in real time.
  */
 
-const BASE_URL = ''; // Vite proxy forwards /api → http://localhost:8000
+const API_BASE =
+  (typeof process !== 'undefined' && process?.env?.EXPO_PUBLIC_API_BASE_URL) ||
+  (typeof window !== 'undefined' && window?.location?.hostname === 'localhost'
+    ? 'http://localhost:8000'
+    : 'http://127.0.0.1:8000');
+
+const BASE_URL = API_BASE.replace(/\/$/, '');
 
 // ─── Console logger ────────────────────────────────────────────────────────────
 function logSent(method, path, body) {
@@ -68,8 +74,8 @@ export const api = {
   getMe:       (token)              => request('GET',   '/api/v1/workers/me', null, token),
   getPolicy:   (workerId, token)    => request('GET',   `/api/v1/workers/${workerId}/policy`, null, token),
   getPayouts:  (workerId, token)    => request('GET',   `/api/v1/workers/${workerId}/payouts`, null, token),
-  initiateMockPayout: (workerId, payload, token) =>
-    request('POST', `/api/v1/workers/${workerId}/payouts/mock-initiate`, payload, token),
+  initiatePayout: (workerId, payload, token) =>
+    request('POST', `/api/v1/workers/${workerId}/payouts/initiate`, payload, token),
   updateWorker:(workerId, data, tk) => request('PATCH', `/api/v1/workers/${workerId}`, data, tk),
   getWorkerInsights: (token)         => request('GET',   '/api/v1/ai/worker-insights', null, token),
 

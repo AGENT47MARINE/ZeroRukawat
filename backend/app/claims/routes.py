@@ -6,6 +6,7 @@ from ..models import Claim, Policy, Disruption, Worker
 from ..utils.response import success, error
 from ..utils.auth_utils import admin_required, require_internal_key
 from ..services import fraud_service, notification_service
+from ..services.claim_signal_service import build_fraud_features, derive_disrupted_days
 from ..services.payout_stage_service import (
     PAYOUT_STAGE_FRAUD_CHECK,
     PAYOUT_STAGE_INCOME_ESTIMATION,
@@ -48,13 +49,14 @@ def evaluate():
                 f"_{disruption.type.replace(' ', '_').upper()}"
             )
 
+            fraud_features = build_fraud_features(worker)
             fraud_result = fraud_service.validate_claim(
                 worker_id=worker.id,
                 event_id=event_id,
-                gps_movement_score=0.05,
-                deliveries_in_window=0,
-                claim_frequency_7d=0,
-                zone_traffic_clear=False,
+                gps_movement_score=fraud_features['gps_movement_score'],
+                deliveries_in_window=fraud_features['deliveries_in_window'],
+                claim_frequency_7d=fraud_features['claim_frequency_7d'],
+                zone_traffic_clear=fraud_features['zone_traffic_clear'],
             )
 
             fraud_score = fraud_result.get('fraud_score', 0.3)
@@ -69,7 +71,7 @@ def evaluate():
                     worker_id=worker.id,
                     zone=disruption.zone,
                     city=worker.city,
-                    disrupted_days=1,
+                    disrupted_days=derive_disrupted_days(disruption.start_time, disruption.end_time),
                     upi_id=worker.upi_id or 'worker@upi',
                     worker_phone=worker.phone,
                     device_token='FCM_DEV_TOKEN',
@@ -172,7 +174,7 @@ def resolve(claim_id):
             append_stage(claim, PAYOUT_STAGE_INCOME_ESTIMATION, 'Calculating eligible payout amount')
             payout_result = fraud_service.process_full_payout(
                 worker_id=worker.id, zone=disruption.zone, city=worker.city,
-                disrupted_days=1, upi_id=worker.upi_id or 'worker@upi',
+                disrupted_days=derive_disrupted_days(disruption.start_time, disruption.end_time), upi_id=worker.upi_id or 'worker@upi',
                 worker_phone=worker.phone, device_token='FCM_DEV_TOKEN',
             )
             if payout_result.get('status') == 'error':
