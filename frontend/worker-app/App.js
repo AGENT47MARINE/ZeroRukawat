@@ -98,6 +98,7 @@ const useStore = create((set, get) => ({
   dashboardError: '',
   otpReference: '',
   registrationToken: '',
+  otpMode: 'register',
   registration: {
     phone: '9876543210',
     name: 'Rahul Kumar',
@@ -116,6 +117,46 @@ const useStore = create((set, get) => ({
   setRegistrationField: (field, value) => set((state) => ({
     registration: { ...state.registration, [field]: value },
   })),
+  continueWithPhone: async (rawPhone) => {
+    const cleanedPhone = String(rawPhone || '').replace(/\D/g, '').slice(-10);
+    if (cleanedPhone.length !== 10) {
+      set({ onboardingError: 'Enter a valid 10-digit phone number.' });
+      return;
+    }
+
+    set((state) => ({
+      onboardingLoading: true,
+      onboardingError: '',
+      registration: { ...state.registration, phone: cleanedPhone },
+    }));
+
+    try {
+      const resp = await api.requestOtp(cleanedPhone);
+      set({
+        otpMode: 'login',
+        otpReference: resp?.data?.reference || '',
+        registrationToken: '',
+        onboardingStage: 'OTP_INPUT',
+        onboardingError: '',
+      });
+    } catch (e) {
+      const msg = e?.message || 'Unable to continue with this phone number.';
+      const notRegistered = e?.status === 404 || /not registered/i.test(msg);
+      if (notRegistered) {
+        set({
+          otpMode: 'register',
+          otpReference: '',
+          registrationToken: '',
+          onboardingStage: 'REGISTRATION',
+          onboardingError: '',
+        });
+      } else {
+        set({ onboardingError: msg });
+      }
+    } finally {
+      set({ onboardingLoading: false });
+    }
+  },
   setOnboardingStage: (stage) => set({ onboardingStage: stage }),
   setActiveTab: (tab) => set({ activeTab: tab }),
   hydrateDashboard: async () => {
@@ -170,6 +211,7 @@ const useStore = create((set, get) => ({
       });
 
       set({
+        otpMode: 'register',
         registrationToken: resp?.data?.registration_token || '',
         otpReference: resp?.data?.reference || '',
         onboardingStage: 'OTP_INPUT',
@@ -182,16 +224,41 @@ const useStore = create((set, get) => ({
     }
   },
   verifyRegistrationOtp: async (otpValue) => {
-    const { registration, registrationToken } = get();
+    const { registration, registrationToken, otpMode } = get();
     const cleanedPhone = String(registration.phone || '').replace(/\D/g, '').slice(-10);
-
-    if (!registrationToken) {
-      set({ onboardingError: 'Please request OTP first.' });
-      return;
-    }
 
     set({ onboardingLoading: true, onboardingError: '' });
     try {
+      if (otpMode === 'login') {
+        const loginResp = await api.login(cleanedPhone, otpValue);
+        const jwt = loginResp?.data?.access_token;
+        const worker = loginResp?.data?.worker;
+        const policyResp = await api.getPolicy(worker.id, jwt).catch(() => ({ data: null }));
+
+        if (Platform.OS === 'web' && typeof window !== 'undefined') {
+          window.localStorage.setItem('zr_token', jwt);
+        }
+
+        set({
+          token: jwt,
+          user: { ...worker, avatar: toAvatar(worker?.name) },
+          pendingUser: null,
+          policy: policyResp?.data || null,
+          otpReference: '',
+          registrationToken: '',
+          onboardingStage: 'METHOD_SELECT',
+          onboardingError: '',
+        });
+
+        await get().hydrateDashboard();
+        return;
+      }
+
+      if (!registrationToken) {
+        set({ onboardingError: 'Please request OTP first.' });
+        return;
+      }
+
       const resp = await api.verifyRegisterOtp(cleanedPhone, otpValue, registrationToken);
       const jwt = resp?.data?.access_token;
       const worker = resp?.data?.worker;
@@ -240,6 +307,7 @@ const useStore = create((set, get) => ({
       balance: 4200,
       registrationToken: '',
       otpReference: '',
+      otpMode: 'register',
       registration: {
         phone: '9876543210',
         name: 'Rahul Kumar',
@@ -289,14 +357,12 @@ const MethodSelect = () => {
 };
 
 const PhoneInput = () => {
-  const { setOnboardingStage, setRegistrationField, onboardingError, setOnboardingError } = useStore();
+  const { setOnboardingStage, onboardingError, setOnboardingError, continueWithPhone, onboardingLoading } = useStore();
   const [phone, setPhone] = useState('9876543210');
 
-  const goNext = () => {
-    const cleaned = phone.replace(/\D/g, '').slice(-10);
-    setRegistrationField('phone', cleaned);
+  const goNext = async () => {
     setOnboardingError('');
-    setOnboardingStage('REGISTRATION');
+    await continueWithPhone(phone);
   };
 
   return (
@@ -305,21 +371,21 @@ const PhoneInput = () => {
         <Ionicons name="arrow-back" size={20} color={T.textPrimary} />
       </TouchableOpacity>
       <Text style={s.stepTitle}>Enter Mobile Number</Text>
-      <Text style={s.stepSub}>Add number to continue registration</Text>
+      <Text style={s.stepSub}>We will check your number and continue with login or registration</Text>
       <View style={s.phoneRow}>
         <View style={s.prefixBox}><Text style={s.prefixText}>+91</Text></View>
         <TextInput style={s.phoneInput} placeholder="00000 00000" placeholderTextColor={T.textTertiary} keyboardType="numeric" maxLength={10} value={phone} onChangeText={setPhone} autoFocus />
       </View>
       {!!onboardingError && <Text style={{ marginTop: 10, color: T.risk, fontSize: 12 }}>{onboardingError}</Text>}
-      <TouchableOpacity activeOpacity={0.85} style={[s.btn, { marginTop: 32, opacity: phone.length === 10 ? 1 : 0.4 }]} disabled={phone.length !== 10} onPress={goNext}>
-        <Text style={s.btnText}>Continue</Text>
+      <TouchableOpacity activeOpacity={0.85} style={[s.btn, { marginTop: 32, opacity: phone.length === 10 && !onboardingLoading ? 1 : 0.4 }]} disabled={phone.length !== 10 || onboardingLoading} onPress={goNext}>
+        <Text style={s.btnText}>{onboardingLoading ? 'Checking...' : 'Continue'}</Text>
       </TouchableOpacity>
     </Animated.View>
   );
 };
 
 const OTPInput = () => {
-  const { setOnboardingStage, verifyRegistrationOtp, onboardingLoading, onboardingError, otpReference } = useStore();
+  const { setOnboardingStage, verifyRegistrationOtp, onboardingLoading, onboardingError, otpReference, otpMode } = useStore();
   const [otp, setOtp] = useState('');
 
   const verifyOtp = async () => {
@@ -329,19 +395,19 @@ const OTPInput = () => {
 
   return (
     <Animated.View entering={SlideInRight} exiting={SlideOutLeft} style={s.onboardCenter}>
-      <TouchableOpacity style={s.backChip} onPress={() => setOnboardingStage('REGISTRATION')}>
+      <TouchableOpacity style={s.backChip} onPress={() => setOnboardingStage(otpMode === 'login' ? 'PHONE_INPUT' : 'REGISTRATION')}>
         <Ionicons name="arrow-back" size={20} color={T.textPrimary} />
       </TouchableOpacity>
       <View style={s.successBanner}>
         <Ionicons name="checkmark-circle" size={18} color={T.success} />
-        <Text style={{ color: T.success, marginLeft: 8, fontWeight: '700', fontSize: 13 }}>OTP sent successfully{otpReference ? ` · Ref ${otpReference}` : ''}</Text>
+        <Text style={{ color: T.success, marginLeft: 8, fontWeight: '700', fontSize: 13 }}>{otpMode === 'login' ? 'Login OTP sent' : 'Registration OTP sent'}{otpReference ? ` · Ref ${otpReference}` : ''}</Text>
       </View>
       <Text style={s.stepTitle}>Verify OTP</Text>
       <Text style={s.stepSub}>Enter the OTP sent to your phone</Text>
       <TextInput style={s.otpField} placeholder="• • • • • •" placeholderTextColor={T.textTertiary} keyboardType="numeric" maxLength={6} value={otp} onChangeText={setOtp} textAlign="center" autoFocus />
       {!!onboardingError && <Text style={{ marginTop: 10, color: T.risk, fontSize: 12 }}>{onboardingError}</Text>}
       <TouchableOpacity activeOpacity={0.85} style={[s.btn, { marginTop: 32, opacity: otp.length >= 4 && !onboardingLoading ? 1 : 0.4 }]} disabled={otp.length < 4 || onboardingLoading} onPress={verifyOtp}>
-        <Text style={s.btnText}>{onboardingLoading ? 'Verifying...' : 'Verify'}</Text>
+        <Text style={s.btnText}>{onboardingLoading ? 'Verifying...' : (otpMode === 'login' ? 'Login' : 'Verify')}</Text>
       </TouchableOpacity>
     </Animated.View>
   );

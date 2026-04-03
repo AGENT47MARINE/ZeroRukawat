@@ -53,7 +53,9 @@ async function request(method, path, body = null, token = null) {
   logReceived(method, path, response.status, data, response.ok);
 
   if (!response.ok) {
-    throw new Error(data.message || `Request failed (${response.status})`);
+    const err = new Error(data.message || `Request failed (${response.status})`);
+    err.status = response.status;
+    throw err;
   }
   return data; // { status: 'success', data: { ... } }
 }
