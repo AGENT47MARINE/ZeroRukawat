@@ -68,6 +68,8 @@ export const api = {
   getMe:       (token)              => request('GET',   '/api/v1/workers/me', null, token),
   getPolicy:   (workerId, token)    => request('GET',   `/api/v1/workers/${workerId}/policy`, null, token),
   getPayouts:  (workerId, token)    => request('GET',   `/api/v1/workers/${workerId}/payouts`, null, token),
+  initiateMockPayout: (workerId, payload, token) =>
+    request('POST', `/api/v1/workers/${workerId}/payouts/mock-initiate`, payload, token),
   updateWorker:(workerId, data, tk) => request('PATCH', `/api/v1/workers/${workerId}`, data, tk),
   getWorkerInsights: (token)         => request('GET',   '/api/v1/ai/worker-insights', null, token),
 

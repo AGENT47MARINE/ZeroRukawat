@@ -4,6 +4,7 @@ Schema source: docs/database.md
 Additions: hashed_password, is_active, is_admin (workers) + resolution_note (claims)
 """
 import uuid
+import json
 from datetime import datetime
 from .extensions import db
 
@@ -120,8 +121,21 @@ class Claim(db.Model):
     resolved_at      = db.Column(db.DateTime,    nullable=True)
     # ── addition (not in docs/database.md) ───────────────────────────────────
     resolution_note  = db.Column(db.String(500), nullable=True)
+    payout_stage           = db.Column(db.String(30),  nullable=True)
+    payout_transaction_id  = db.Column(db.String(120), nullable=True)
+    payout_error_reason    = db.Column(db.String(500), nullable=True)
+    payout_stage_timeline  = db.Column(db.Text,        nullable=True)
+    payout_last_updated_at = db.Column(db.DateTime,    nullable=True)
 
     def to_dict(self):
+        timeline = []
+        if self.payout_stage_timeline:
+            try:
+                parsed = json.loads(self.payout_stage_timeline)
+                timeline = parsed if isinstance(parsed, list) else []
+            except (TypeError, ValueError):
+                timeline = []
+
         return {
             'id':              self.id,
             'policy_id':       self.policy_id,
@@ -132,4 +146,11 @@ class Claim(db.Model):
             'created_at':      self.created_at.isoformat(),
             'resolved_at':     self.resolved_at.isoformat() if self.resolved_at else None,
             'resolution_note': self.resolution_note,
+            'payout_stage': self.payout_stage,
+            'payout_transaction_id': self.payout_transaction_id,
+            'payout_error_reason': self.payout_error_reason,
+            'payout_stage_timeline': timeline,
+            'payout_last_updated_at': (
+                self.payout_last_updated_at.isoformat() if self.payout_last_updated_at else None
+            ),
         }

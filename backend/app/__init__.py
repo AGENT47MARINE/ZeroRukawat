@@ -65,6 +65,7 @@ def create_app(config_name='development'):
     # ── Init DB + seed admin ──────────────────────────────────────────────────
     with app.app_context():
         db.create_all()
+        _ensure_claim_payout_columns()
         _seed_admin(app)
 
     # ── Start background weather poller ───────────────────────────────────────
@@ -105,3 +106,27 @@ def _seed_admin(app):
     app.logger.info('    Password : Admin@2024')
     app.logger.info('    Endpoint : POST /api/v1/auth/admin/login')
     app.logger.info('=' * 55)
+
+
+def _ensure_claim_payout_columns():
+    """Backfill new Claim payout columns for existing local databases."""
+    inspector = db.inspect(db.engine)
+    columns = {column['name'] for column in inspector.get_columns('claims')}
+
+    alter_statements = []
+    if 'payout_stage' not in columns:
+        alter_statements.append('ALTER TABLE claims ADD COLUMN payout_stage VARCHAR(30)')
+    if 'payout_transaction_id' not in columns:
+        alter_statements.append('ALTER TABLE claims ADD COLUMN payout_transaction_id VARCHAR(120)')
+    if 'payout_error_reason' not in columns:
+        alter_statements.append('ALTER TABLE claims ADD COLUMN payout_error_reason VARCHAR(500)')
+    if 'payout_stage_timeline' not in columns:
+        alter_statements.append('ALTER TABLE claims ADD COLUMN payout_stage_timeline TEXT')
+    if 'payout_last_updated_at' not in columns:
+        alter_statements.append('ALTER TABLE claims ADD COLUMN payout_last_updated_at DATETIME')
+
+    for statement in alter_statements:
+        db.session.execute(db.text(statement))
+
+    if alter_statements:
+        db.session.commit()
