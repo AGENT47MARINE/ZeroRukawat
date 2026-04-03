@@ -1,112 +1,121 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { BrowserRouter, Routes, Route, Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Users, Activity, ShieldAlert, BarChart3, Settings, Zap } from 'lucide-react';
+import { LayoutDashboard, Activity, ShieldAlert, BarChart3, Settings, Zap, LogOut, Bell, Search, ChevronRight } from 'lucide-react';
 import { useStore } from './store/useStore';
 
-// Dummy imports for now - we will build these next
 import DashboardPage from './features/Dashboard/DashboardPage';
 import FraudQueuePage from './features/Fraud/FraudQueuePage';
 import DisruptionMapPage from './features/Map/DisruptionMapPage';
 import AnalyticsPage from './features/Analytics/AnalyticsPage';
+import SettingsPage from './features/Settings/SettingsPage';
 import LoginPage from './features/Auth/LoginPage';
-import { LogOut } from 'lucide-react';
 
+/* ─── Sidebar ─── */
 const Sidebar = () => {
   const location = useLocation();
   const navItems = [
-    { name: 'Command Center', path: '/', icon: <LayoutDashboard size={20} /> },
-    { name: 'Disruption Map', path: '/map', icon: <Activity size={20} /> },
-    { name: 'Fraud Queue', path: '/fraud', icon: <ShieldAlert size={20} /> },
-    { name: 'Analytics', path: '/analytics', icon: <BarChart3 size={20} /> },
-    { name: 'Settings', path: '/settings', icon: <Settings size={20} /> },
+    { name: 'Command Center', path: '/', icon: LayoutDashboard },
+    { name: 'Disruption Map', path: '/map', icon: Activity },
+    { name: 'Fraud Queue', path: '/fraud', icon: ShieldAlert },
+    { name: 'Analytics', path: '/analytics', icon: BarChart3 },
+    { name: 'Settings', path: '/settings', icon: Settings },
   ];
 
   return (
-    <div className="w-64 bg-card border-r border-white/5 flex flex-col h-screen">
-      <div className="p-6 flex items-center space-x-3">
-        <div className="w-8 h-8 rounded bg-gradient-to-tr from-success to-ai flex items-center justify-center shadow-lg shadow-success/20">
+    <aside className="w-[260px] bg-surface-1 border-r border-bdr flex flex-col h-screen shrink-0">
+      {/* Logo */}
+      <div className="h-18 px-6 flex items-center gap-3 border-b border-bdr">
+        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-ai to-ai-dark flex items-center justify-center shadow-glow-ai">
           <Zap size={18} className="text-white" />
         </div>
-        <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-white/70">
+        <span className="text-lg font-display font-bold text-txt-primary tracking-tight">
           ZeroRukawat
         </span>
       </div>
-      <nav className="flex-1 px-4 space-y-2 mt-4">
+
+      {/* Navigation */}
+      <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+        <p className="text-overline text-txt-muted uppercase tracking-widest px-3 mb-3">Navigation</p>
         {navItems.map((item) => {
           const isActive = location.pathname === item.path;
+          const Icon = item.icon;
           return (
             <Link
               key={item.name}
               to={item.path}
-              className={`flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-200 ${
-                isActive 
-                  ? 'bg-ai/10 text-ai border border-ai/20 shadow-inner' 
-                  : 'text-gray-400 hover:text-white hover:bg-white/5'
+              className={`group flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 ${
+                isActive
+                  ? 'bg-ai/10 text-ai shadow-inner border border-ai/15'
+                  : 'text-txt-tertiary hover:text-txt-primary hover:bg-surface-3'
               }`}
             >
-              {item.icon}
-              <span className="font-medium">{item.name}</span>
+              <Icon size={18} strokeWidth={isActive ? 2.2 : 1.8} />
+              <span className="text-sm font-medium">{item.name}</span>
+              {isActive && <ChevronRight size={14} className="ml-auto opacity-50" />}
             </Link>
           );
         })}
       </nav>
-      <div className="p-6">
-        <div className="bg-darker rounded-xl p-4 border border-white/5 flex flex-col items-center">
-          <div className="text-xs text-gray-400 uppercase tracking-wider mb-1">System Status</div>
-          <div className="flex items-center space-x-2 text-success font-semibold">
-            <span className="relative flex h-3 w-3">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-3 w-3 bg-success"></span>
-            </span>
+
+      {/* System Status Footer */}
+      <div className="p-4 border-t border-bdr">
+        <div className="bg-surface-2 rounded-xl p-3.5 border border-bdr">
+          <div className="text-overline text-txt-muted uppercase tracking-widest mb-2">System Status</div>
+          <div className="flex items-center gap-2 text-success text-sm font-semibold">
+            <span className="pulse-dot pulse-dot-success"></span>
             <span>All Systems Operational</span>
           </div>
         </div>
       </div>
-    </div>
+    </aside>
   );
 };
 
+/* ─── Topbar ─── */
 const Topbar = () => {
   const { systemHealth, queueLength, inferenceLatency, slaPercentage, triggerSimulation } = useStore();
-  
+
+  const metrics = [
+    { label: 'Health', value: `${systemHealth}%`, color: 'text-success' },
+    { label: 'Claim Queue', value: queueLength, color: 'text-txt-primary', alert: queueLength > 200 },
+    { label: 'AI Latency', value: `${inferenceLatency}ms`, color: 'text-txt-primary' },
+    { label: 'Payout SLA', value: `${slaPercentage}%`, color: 'text-success' },
+  ];
+
   return (
-    <header className="h-20 bg-card/50 backdrop-blur border-b border-white/5 flex items-center justify-between px-8 z-10 sticky top-0">
-      <div className="flex space-x-8">
-        <div className="flex flex-col">
-          <span className="text-xs text-gray-400 uppercase tracking-wide">Health</span>
-          <span className="text-xl font-bold text-success">{systemHealth}%</span>
-        </div>
-        <div className="flex flex-col">
-          <span className="text-xs text-gray-400 uppercase tracking-wide">Claim Queue</span>
-          <span className="text-xl font-bold text-white group relative">
-            {queueLength}
-            {queueLength > 200 && (
-              <span className="absolute -top-1 -right-3 h-2 w-2 rounded-full bg-processing animate-pulse"></span>
-            )}
-          </span>
-        </div>
-        <div className="flex flex-col">
-          <span className="text-xs text-gray-400 uppercase tracking-wide">AI Latency</span>
-          <span className="text-xl font-bold text-white">{inferenceLatency}ms</span>
-        </div>
-        <div className="flex flex-col">
-          <span className="text-xs text-gray-400 uppercase tracking-wide">Payout SLA (&lt;15m)</span>
-          <span className="text-xl font-bold text-success">{slaPercentage}%</span>
-        </div>
+    <header className="h-16 bg-surface-1/80 backdrop-blur-xl border-b border-bdr flex items-center justify-between px-6 z-10 sticky top-0">
+      {/* Metric Chips */}
+      <div className="flex items-center gap-6">
+        {metrics.map((m, i) => (
+          <div key={i} className="flex flex-col">
+            <span className="text-overline text-txt-muted uppercase">{m.label}</span>
+            <span className={`text-title font-bold ${m.color} relative`}>
+              {m.value}
+              {m.alert && (
+                <span className="absolute -top-0.5 -right-2.5 h-2 w-2 rounded-full bg-processing animate-pulse"></span>
+              )}
+            </span>
+          </div>
+        ))}
       </div>
-      
-      <div className="flex items-center space-x-4">
-        <button 
+
+      {/* Right Actions */}
+      <div className="flex items-center gap-3">
+        <button
           onClick={triggerSimulation}
-          className="px-6 py-2.5 bg-risk/10 text-risk border border-risk/30 rounded-full font-semibold text-sm transition-all hover:bg-risk hover:text-white hover:shadow-lg hover:shadow-risk/30 flex items-center space-x-2 hover-lift"
+          className="btn-danger text-xs px-4 py-2"
         >
-          <Zap size={16} />
-          <span>Simulate Storm Spike</span>
+          <Zap size={14} />
+          <span>Simulate Storm</span>
         </button>
 
-        <button 
+        <button className="btn-icon" title="Notifications">
+          <Bell size={16} />
+        </button>
+
+        <button
           onClick={() => useStore.getState().logout()}
-          className="p-2.5 bg-white/5 border border-white/10 rounded-full text-gray-400 font-semibold transition-all hover:bg-risk/10 hover:border-risk/30 hover:text-risk flex items-center justify-center hover-lift"
+          className="btn-icon hover:!text-risk hover:!border-risk/30 hover:!bg-risk/10"
           title="Sign Out"
         >
           <LogOut size={16} />
@@ -116,6 +125,7 @@ const Topbar = () => {
   );
 };
 
+/* ─── App Shell ─── */
 function App() {
   const { isAuthenticated } = useStore();
 
@@ -125,17 +135,17 @@ function App() {
 
   return (
     <BrowserRouter>
-      <div className="flex h-screen overflow-hidden bg-darker">
+      <div className="flex h-screen overflow-hidden bg-surface-0">
         <Sidebar />
         <div className="flex-1 flex flex-col relative overflow-hidden">
           <Topbar />
-          <main className="flex-1 overflow-y-auto p-8 relative scroll-smooth">
+          <main className="flex-1 overflow-y-auto p-6 relative scroll-smooth">
             <Routes>
               <Route path="/" element={<DashboardPage />} />
               <Route path="/map" element={<DisruptionMapPage />} />
               <Route path="/fraud" element={<FraudQueuePage />} />
               <Route path="/analytics" element={<AnalyticsPage />} />
-              <Route path="/settings" element={<div className="text-white p-10"><h2 className="text-2xl font-bold">System Configuration</h2><p className="text-gray-400 mt-2">Coming soon...</p></div>} />
+              <Route path="/settings" element={<SettingsPage />} />
             </Routes>
           </main>
         </div>

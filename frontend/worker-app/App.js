@@ -7,12 +7,45 @@ import { Ionicons } from '@expo/vector-icons';
 
 const { width } = Dimensions.get('window');
 
-// --- ZUSTAND STORE ---
+// ═══════════════════════════════════════════
+// DESIGN TOKENS
+// ═══════════════════════════════════════════
+const T = {
+  // Colors
+  bg: '#FFFFFF',
+  bgSoft: '#F8FAFC',
+  bgMuted: '#F1F5F9',
+  primary: '#4F46E5',     // indigo
+  primaryLight: '#EEF2FF',
+  success: '#059669',
+  successLight: '#D1FAE5',
+  risk: '#DC2626',
+  riskLight: '#FEE2E2',
+  warning: '#D97706',
+  warningLight: '#FEF3C7',
+  textPrimary: '#0F172A',
+  textSecondary: '#475569',
+  textTertiary: '#94A3B8',
+  border: '#E2E8F0',
+  borderFocus: '#4F46E5',
+  card: '#FFFFFF',
+  // Spacing (8px grid)
+  s4: 4, s8: 8, s12: 12, s16: 16, s20: 20, s24: 24, s32: 32, s40: 40, s48: 48,
+  // Radius
+  r8: 8, r12: 12, r16: 16, r20: 20, r24: 24, rFull: 999,
+  // Shadows
+  shadow1: { shadowColor: '#0F172A', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.04, shadowRadius: 3, elevation: 1 },
+  shadow2: { shadowColor: '#0F172A', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 3 },
+  shadow3: { shadowColor: '#0F172A', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.08, shadowRadius: 16, elevation: 5 },
+};
+
+// ═══════════════════════════════════════════
+// ZUSTAND STORE
+// ═══════════════════════════════════════════
 const useStore = create((set) => ({
-  user: null, 
-  onboardingStage: 'METHOD_SELECT', 
+  user: null,
+  onboardingStage: 'METHOD_SELECT',
   activeTab: 'HOME',
-  isOffline: false,
   appState: 'NORMAL',
   balance: 4200,
   savedByShield: 0,
@@ -25,8 +58,8 @@ const useStore = create((set) => ({
   triggerPayout: () => {
     set({ appState: 'TRIGGERED' });
     setTimeout(() => {
-      set((state) => ({ 
-        appState: 'PAID', 
+      set((state) => ({
+        appState: 'PAID',
         balance: state.balance + 450,
         savedByShield: state.savedByShield + 450,
         recentPayouts: [{ id: Date.now().toString(), eventId: 'BLR-HEAT-20250615', amount: 450, reason: 'Severe Heatwave', date: 'Today', time: '2:15 PM', status: 'Paid', zone: 'Indiranagar, BLR', details: { threshold: '>40°C', gps: 'Match', fraud: 'Passed' } }, ...state.recentPayouts]
@@ -36,21 +69,25 @@ const useStore = create((set) => ({
   }
 }));
 
-// --- ONBOARDING COMPONENTS ---
+// ═══════════════════════════════════════════
+// ONBOARDING COMPONENTS
+// ═══════════════════════════════════════════
 const MethodSelect = () => {
   const { setOnboardingStage } = useStore();
   return (
-    <Animated.View entering={FadeInUp} style={styles.onboardingContainer}>
-      <Ionicons name="shield-half" size={80} color="#3B82F6" style={{ marginBottom: 20 }} />
-      <Text style={styles.onboardingTitle}>Welcome to ZeroRukawat</Text>
-      <Text style={styles.onboardingSub}>How would you like to continue your protection journey?</Text>
-      <TouchableOpacity style={[styles.btnPrimary, { backgroundColor: '#25D366', marginTop: 30 }]} onPress={() => alert('Opening WhatsApp Bot...')}>
-        <Ionicons name="logo-whatsapp" size={24} color="#fff" />
-        <Text style={[styles.btnPrimaryText, { marginLeft: 10 }]}>Continue via WhatsApp</Text>
+    <Animated.View entering={FadeInUp} style={s.onboardCenter}>
+      <View style={s.logoBadge}>
+        <Ionicons name="shield-checkmark" size={36} color={T.primary} />
+      </View>
+      <Text style={s.heroTitle}>ZeroRukawat</Text>
+      <Text style={s.heroSub}>Income protection for gig workers.{'\n'}Instant payouts when disruptions hit.</Text>
+      <TouchableOpacity activeOpacity={0.85} style={[s.btn, { backgroundColor: '#25D366', marginTop: 32 }]} onPress={() => alert('Opening WhatsApp Bot...')}>
+        <Ionicons name="logo-whatsapp" size={22} color="#fff" />
+        <Text style={s.btnText}>Continue via WhatsApp</Text>
       </TouchableOpacity>
-      <TouchableOpacity style={[styles.btnSecondary, { marginTop: 15 }]} onPress={() => setOnboardingStage('PHONE_INPUT')}>
-        <Ionicons name="phone-portrait-outline" size={24} color="#3B82F6" />
-        <Text style={[styles.btnSecondaryText, { marginLeft: 10, color: '#1E293B' }]}>Continue via App</Text>
+      <TouchableOpacity activeOpacity={0.85} style={[s.btnOutline, { marginTop: 12 }]} onPress={() => setOnboardingStage('PHONE_INPUT')}>
+        <Ionicons name="phone-portrait-outline" size={20} color={T.primary} />
+        <Text style={[s.btnText, { color: T.textPrimary }]}>Continue via App</Text>
       </TouchableOpacity>
     </Animated.View>
   );
@@ -60,16 +97,18 @@ const PhoneInput = () => {
   const { setOnboardingStage } = useStore();
   const [phone, setPhone] = useState('9876543210');
   return (
-    <Animated.View entering={SlideInRight} exiting={SlideOutLeft} style={styles.onboardingContainer}>
-      <TouchableOpacity style={styles.backBtn} onPress={() => setOnboardingStage('METHOD_SELECT')}><Ionicons name="arrow-back" size={24} color="#1E293B" /></TouchableOpacity>
-      <Text style={styles.onboardingTitle}>Enter Mobile Number</Text>
-      <Text style={styles.onboardingSub}>We'll send an OTP to verify your account</Text>
-      <View style={styles.inputGroup}>
-        <Text style={styles.inputPrefix}>+91</Text>
-        <TextInput style={styles.input} placeholder="00000 00000" placeholderTextColor="#94A3B8" keyboardType="numeric" maxLength={10} value={phone} onChangeText={setPhone} autoFocus />
+    <Animated.View entering={SlideInRight} exiting={SlideOutLeft} style={s.onboardCenter}>
+      <TouchableOpacity style={s.backChip} onPress={() => setOnboardingStage('METHOD_SELECT')}>
+        <Ionicons name="arrow-back" size={20} color={T.textPrimary} />
+      </TouchableOpacity>
+      <Text style={s.stepTitle}>Enter Mobile Number</Text>
+      <Text style={s.stepSub}>We'll send an OTP to verify your account</Text>
+      <View style={s.phoneRow}>
+        <View style={s.prefixBox}><Text style={s.prefixText}>+91</Text></View>
+        <TextInput style={s.phoneInput} placeholder="00000 00000" placeholderTextColor={T.textTertiary} keyboardType="numeric" maxLength={10} value={phone} onChangeText={setPhone} autoFocus />
       </View>
-      <TouchableOpacity style={[styles.btnPrimary, { marginTop: 30, opacity: phone.length === 10 ? 1 : 0.5 }]} disabled={phone.length !== 10} onPress={() => setOnboardingStage('OTP_INPUT')}>
-        <Text style={styles.btnPrimaryText}>Send OTP</Text>
+      <TouchableOpacity activeOpacity={0.85} style={[s.btn, { marginTop: 32, opacity: phone.length === 10 ? 1 : 0.4 }]} disabled={phone.length !== 10} onPress={() => setOnboardingStage('OTP_INPUT')}>
+        <Text style={s.btnText}>Send OTP</Text>
       </TouchableOpacity>
     </Animated.View>
   );
@@ -79,17 +118,19 @@ const OTPInput = () => {
   const { setOnboardingStage } = useStore();
   const [otp, setOtp] = useState('1234');
   return (
-    <Animated.View entering={SlideInRight} exiting={SlideOutLeft} style={styles.onboardingContainer}>
-      <TouchableOpacity style={styles.backBtn} onPress={() => setOnboardingStage('PHONE_INPUT')}><Ionicons name="arrow-back" size={24} color="#1E293B" /></TouchableOpacity>
-      <View style={styles.otpMessage}>
-        <Ionicons name="checkmark-circle" size={20} color="#10B981" />
-        <Text style={{ color: '#10B981', marginLeft: 8, fontWeight: 'bold' }}>OTP sent successfully</Text>
+    <Animated.View entering={SlideInRight} exiting={SlideOutLeft} style={s.onboardCenter}>
+      <TouchableOpacity style={s.backChip} onPress={() => setOnboardingStage('PHONE_INPUT')}>
+        <Ionicons name="arrow-back" size={20} color={T.textPrimary} />
+      </TouchableOpacity>
+      <View style={s.successBanner}>
+        <Ionicons name="checkmark-circle" size={18} color={T.success} />
+        <Text style={{ color: T.success, marginLeft: 8, fontWeight: '700', fontSize: 13 }}>OTP sent successfully</Text>
       </View>
-      <Text style={styles.onboardingTitle}>Verify OTP</Text>
-      <Text style={styles.onboardingSub}>Enter the 4-digit code sent to your phone</Text>
-      <TextInput style={styles.otpInput} placeholder="----" placeholderTextColor="#94A3B8" keyboardType="numeric" maxLength={4} value={otp} onChangeText={setOtp} textAlign="center" autoFocus />
-      <TouchableOpacity style={[styles.btnPrimary, { marginTop: 30, opacity: otp.length === 4 ? 1 : 0.5 }]} disabled={otp.length !== 4} onPress={() => setOnboardingStage('REGISTRATION')}>
-        <Text style={styles.btnPrimaryText}>Verify</Text>
+      <Text style={s.stepTitle}>Verify OTP</Text>
+      <Text style={s.stepSub}>Enter the 4-digit code sent to your phone</Text>
+      <TextInput style={s.otpField} placeholder="• • • •" placeholderTextColor={T.textTertiary} keyboardType="numeric" maxLength={4} value={otp} onChangeText={setOtp} textAlign="center" autoFocus />
+      <TouchableOpacity activeOpacity={0.85} style={[s.btn, { marginTop: 32, opacity: otp.length === 4 ? 1 : 0.4 }]} disabled={otp.length !== 4} onPress={() => setOnboardingStage('REGISTRATION')}>
+        <Text style={s.btnText}>Verify</Text>
       </TouchableOpacity>
     </Animated.View>
   );
@@ -97,26 +138,29 @@ const OTPInput = () => {
 
 const RegistrationForm = () => {
   const { setOnboardingStage } = useStore();
+  const fields = [
+    { label: 'Full Name', val: 'Rahul Kumar' },
+    { label: 'City', val: 'Bengaluru' },
+    { label: 'Delivery Zone', val: 'Koramangala' },
+    { label: 'Platform', val: 'Zomato & Swiggy' },
+    { label: 'UPI ID', val: 'rahul@okicici' }
+  ];
   return (
     <Animated.View entering={SlideInRight} exiting={SlideOutLeft} style={{ flex: 1 }}>
-      <ScrollView contentContainerStyle={styles.scrollForm}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => setOnboardingStage('OTP_INPUT')}><Ionicons name="arrow-back" size={24} color="#1E293B" /></TouchableOpacity>
-        <Text style={[styles.onboardingTitle, { fontSize: 24, textAlign: 'left' }]}>Profile Details</Text>
-        <Text style={[styles.onboardingSub, { textAlign: 'left', marginBottom: 20 }]}>Final step to active your protection</Text>
-        {[
-          { label: 'Full Name', val: 'Rahul Kumar' },
-          { label: 'City', val: 'Bengaluru' },
-          { label: 'Delivery Zone', val: 'Koramangala' },
-          { label: 'Platform', val: 'Zomato & Swiggy' },
-          { label: 'UPI ID', val: 'rahul@okicici' }
-        ].map((field, i) => (
-          <View key={i} style={{ marginBottom: 15 }}>
-            <Text style={styles.label}>{field.label}</Text>
-            <TextInput style={styles.formInput} value={field.val} placeholderTextColor="#94A3B8" editable={true} />
+      <ScrollView contentContainerStyle={s.formScroll} showsVerticalScrollIndicator={false}>
+        <TouchableOpacity style={s.backChip} onPress={() => setOnboardingStage('OTP_INPUT')}>
+          <Ionicons name="arrow-back" size={20} color={T.textPrimary} />
+        </TouchableOpacity>
+        <Text style={[s.stepTitle, { textAlign: 'left', fontSize: 24 }]}>Profile Details</Text>
+        <Text style={[s.stepSub, { textAlign: 'left', marginBottom: 24 }]}>Final step to activate your protection</Text>
+        {fields.map((f, i) => (
+          <View key={i} style={{ marginBottom: 16 }}>
+            <Text style={s.fieldLabel}>{f.label}</Text>
+            <TextInput style={s.fieldInput} value={f.val} placeholderTextColor={T.textTertiary} editable={true} />
           </View>
         ))}
-        <TouchableOpacity style={[styles.btnPrimary, { marginTop: 20, marginBottom: 40 }]} onPress={() => setOnboardingStage('VERIFICATION')}>
-          <Text style={styles.btnPrimaryText}>Verify & Continue</Text>
+        <TouchableOpacity activeOpacity={0.85} style={[s.btn, { marginTop: 8, marginBottom: 48 }]} onPress={() => setOnboardingStage('VERIFICATION')}>
+          <Text style={s.btnText}>Verify & Continue</Text>
         </TouchableOpacity>
       </ScrollView>
     </Animated.View>
@@ -127,24 +171,19 @@ const VerificationLoading = () => {
   const { setOnboardingStage } = useStore();
   const [step, setStep] = useState(0);
   useEffect(() => {
-    const timers = [
-      setTimeout(() => setStep(1), 1000),
-      setTimeout(() => setStep(2), 2000),
-      setTimeout(() => setStep(3), 3000),
-      setTimeout(() => setOnboardingStage('PLAN_SELECTION'), 4000)
-    ];
-    return () => timers.forEach(clearTimeout);
+    const t = [setTimeout(() => setStep(1), 1000), setTimeout(() => setStep(2), 2000), setTimeout(() => setStep(3), 3000), setTimeout(() => setOnboardingStage('PLAN_SELECTION'), 4000)];
+    return () => t.forEach(clearTimeout);
   }, []);
   const steps = ['Verifying identity...', 'Checking details...', 'Validating Platform ID...', 'Optimizing AI profile...'];
   return (
-    <Animated.View entering={FadeIn} style={styles.onboardingContainer}>
-      <ActivityIndicator size="large" color="#3B82F6" style={{ marginBottom: 30, transform: [{ scale: 1.5 }] }} />
-      <Text style={[styles.onboardingTitle, { marginBottom: 10 }]}>Verification in Progress</Text>
-      <View style={{ width: '100%', paddingHorizontal: 20, marginTop: 20 }}>
+    <Animated.View entering={FadeIn} style={s.onboardCenter}>
+      <ActivityIndicator size="large" color={T.primary} style={{ marginBottom: 32, transform: [{ scale: 1.4 }] }} />
+      <Text style={[s.stepTitle, { marginBottom: 8 }]}>Verification in Progress</Text>
+      <View style={{ width: '100%', paddingHorizontal: 24, marginTop: 24 }}>
         {steps.map((text, i) => (
-          <Animated.View key={i} entering={FadeInDown} style={{ flexDirection: 'row', alignItems: 'center', marginVertical: 8, opacity: i <= step ? 1 : 0.2 }}>
-            <Ionicons name={i < step ? "checkmark-circle" : "ellipse-outline"} size={20} color={i < step ? "#10B981" : "#64748B"} />
-            <Text style={{ color: i < step ? '#10B981' : '#1E293B', marginLeft: 10, fontSize: 14 }}>{text}</Text>
+          <Animated.View key={i} entering={FadeInDown} style={{ flexDirection: 'row', alignItems: 'center', marginVertical: 10, opacity: i <= step ? 1 : 0.15 }}>
+            <Ionicons name={i < step ? "checkmark-circle" : "ellipse-outline"} size={20} color={i < step ? T.success : T.textTertiary} />
+            <Text style={{ color: i < step ? T.success : T.textPrimary, marginLeft: 12, fontSize: 14, fontWeight: '500' }}>{text}</Text>
           </Animated.View>
         ))}
       </View>
@@ -156,150 +195,157 @@ const PlanSelection = () => {
   const { setOnboardingStage } = useStore();
   const [selected, setSelected] = useState(1);
   const plans = [
-    { id: 0, title: 'Bronze Card', earn: 'Up to ₹4,000', price: '₹49/week', maxPayout: '₹2,450', cov: '70% of lost income', color: '#B08D57', bg: 'rgba(176,141,87,0.1)' },
-    { id: 1, title: 'Silver Card', earn: '₹4,000 - ₹7,000', price: '₹79/week', maxPayout: '₹3,850', cov: '70% of lost income', color: '#64748B', bg: 'rgba(100,116,139,0.1)' },
-    { id: 2, title: 'Gold Card', earn: '₹7,000 and above', price: '₹99/week', maxPayout: '₹6,300', cov: '70% of lost income', color: '#F59E0B', bg: 'rgba(245,158,11,0.1)' }
+    { id: 0, title: 'Bronze', earn: 'Up to ₹4,000', price: '₹49/week', maxPayout: '₹2,450', cov: '70%', color: '#92400E', bg: '#FEF3C7', border: '#F59E0B' },
+    { id: 1, title: 'Silver', earn: '₹4,000 – ₹7,000', price: '₹79/week', maxPayout: '₹3,850', cov: '70%', color: '#334155', bg: '#F1F5F9', border: '#94A3B8' },
+    { id: 2, title: 'Gold', earn: '₹7,000+', price: '₹99/week', maxPayout: '₹6,300', cov: '70%', color: '#92400E', bg: '#FFFBEB', border: '#F59E0B' },
   ];
-
   return (
-    <Animated.View entering={SlideInRight} style={styles.onboardingContainerPad}>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40, alignItems: 'center' }}>
-        <Text style={[styles.onboardingTitle, { marginTop: 40 }]}>Your Weekly Premium</Text>
-        <Text style={styles.onboardingSub}>Select a tier to match your earnings</Text>
-        
-        {plans.map((p, i) => (
-          <TouchableOpacity 
-            key={i} 
-            activeOpacity={0.8}
-            onPress={() => setSelected(p.id)}
-            style={[styles.tierCard, { borderColor: selected === p.id ? p.color : '#E2E8F0', backgroundColor: selected === p.id ? p.bg : '#F1F5F9' }]}
-          >
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-              <Text style={{ color: p.color, fontSize: 20, fontWeight: '800' }}>{p.title}</Text>
-              <View style={styles.pricePill}><Text style={{ color: '#1E293B', fontWeight: 'bold' }}>{p.price}</Text></View>
+    <Animated.View entering={SlideInRight} style={s.onboardPad}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40 }}>
+        <Text style={[s.stepTitle, { marginTop: 48 }]}>Choose Your Plan</Text>
+        <Text style={s.stepSub}>Select a tier matching your weekly earnings</Text>
+
+        {plans.map((p) => (
+          <TouchableOpacity key={p.id} activeOpacity={0.85} onPress={() => setSelected(p.id)}
+            style={[s.planCard, selected === p.id && { borderColor: T.primary, backgroundColor: T.primaryLight, ...T.shadow2 }]}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+              <View>
+                <Text style={[s.planTitle, selected === p.id && { color: T.primary }]}>{p.title}</Text>
+                <Text style={s.planEarn}>{p.earn}</Text>
+              </View>
+              <View style={[s.priceBadge, selected === p.id && { backgroundColor: T.primary }]}>
+                <Text style={[s.priceText, selected === p.id && { color: '#fff' }]}>{p.price}</Text>
+              </View>
             </View>
-            <Text style={styles.tierStatText}>Weekly Earnings: <Text style={{ color: '#1E293B', fontWeight: '500' }}>{p.earn}</Text></Text>
-            <Text style={styles.tierStatText}>Max Payout/Week: <Text style={{ color: '#1E293B', fontWeight: '500' }}>{p.maxPayout}</Text></Text>
-            <Text style={styles.tierStatText}>Coverage: <Text style={{ color: '#10B981', fontWeight: 'bold' }}>{p.cov}</Text></Text>
+            <View style={s.planRow}><Text style={s.planLabel}>Max Payout/Week</Text><Text style={s.planVal}>{p.maxPayout}</Text></View>
+            <View style={s.planRow}><Text style={s.planLabel}>Coverage</Text><Text style={[s.planVal, { color: T.success }]}>{p.cov} of lost income</Text></View>
           </TouchableOpacity>
         ))}
 
-        <Animated.View entering={FadeInUp.delay(300)} style={styles.aiBadge}>
-          <Ionicons name="sparkles" size={16} color="#3B82F6" />
-          <Text style={styles.aiBadgeText}>Our AI has assigned you Silver based on your zone ("Koramangala") and city risk.</Text>
+        <Animated.View entering={FadeInUp.delay(300)} style={s.aiTip}>
+          <Ionicons name="sparkles" size={16} color={T.primary} />
+          <Text style={s.aiTipText}>AI recommends <Text style={{ fontWeight: '800' }}>Silver</Text> based on your zone and city risk profile.</Text>
         </Animated.View>
 
-        <TouchableOpacity style={[styles.btnPrimary, { marginTop: 20, width: '100%' }]} onPress={() => setOnboardingStage('CONFIRMATION')}>
-          <Text style={styles.btnPrimaryText}>Activate Policy</Text>
+        <TouchableOpacity activeOpacity={0.85} style={[s.btn, { marginTop: 20 }]} onPress={() => setOnboardingStage('CONFIRMATION')}>
+          <Text style={s.btnText}>Activate Policy</Text>
         </TouchableOpacity>
-        <Text style={{ color: '#64748B', fontSize: 12, marginTop: 16, textAlign: 'center' }}>Auto-deducted every Monday from your UPI. Cancel anytime.</Text>
+        <Text style={s.finePrint}>Auto-deducted every Monday from your UPI. Cancel anytime.</Text>
       </ScrollView>
     </Animated.View>
   );
 };
 
 const PolicyConfirmed = () => {
-  const { setUser, setOnboardingStage } = useStore();
+  const { setUser } = useStore();
+  const items = [
+    { k: 'Policy ID', v: 'ZR-BLR-002847' },
+    { k: 'Tier', v: 'Silver' },
+    { k: 'Premium', v: '₹79/week' },
+    { k: 'Coverage', v: '70% of daily income', vc: T.success },
+    { k: 'Next Premium', v: 'Next Monday' },
+  ];
   return (
-    <Animated.View entering={FadeIn} style={styles.onboardingContainer}>
-      <Ionicons name="checkmark-done-circle" size={100} color="#10B981" />
-      <Text style={[styles.onboardingTitle, { marginTop: 24 }]}>You're protected, Rahul!</Text>
-      <View style={styles.invoiceCard}>
-        <Text style={styles.invoiceLabel}>Policy ID:</Text>
-        <Text style={styles.invoiceValue}>GS-BLR-002847</Text>
-        <Text style={styles.invoiceLabel}>Tier:</Text>
-        <Text style={[styles.invoiceValue, { color: '#64748B' }]}>Silver Card</Text>
-        <Text style={styles.invoiceLabel}>Premium:</Text>
-        <Text style={styles.invoiceValue}>₹79/week</Text>
-        <Text style={styles.invoiceLabel}>Coverage:</Text>
-        <Text style={[styles.invoiceValue, { color: '#10B981' }]}>70% of daily income</Text>
-        <Text style={styles.invoiceLabel}>Next premium date:</Text>
-        <Text style={styles.invoiceValue}>Next Monday</Text>
+    <Animated.View entering={FadeIn} style={s.onboardCenter}>
+      <View style={s.confirmCircle}><Ionicons name="checkmark" size={48} color={T.success} /></View>
+      <Text style={[s.stepTitle, { marginTop: 24 }]}>You're protected, Rahul!</Text>
+      <View style={s.invoiceBox}>
+        {items.map((item, i) => (
+          <View key={i} style={[s.invoiceRow, i === items.length - 1 && { marginBottom: 0 }]}>
+            <Text style={s.invoiceK}>{item.k}</Text>
+            <Text style={[s.invoiceV, item.vc && { color: item.vc }]}>{item.v}</Text>
+          </View>
+        ))}
       </View>
-      <TouchableOpacity style={[styles.btnPrimary, { position: 'absolute', bottom: 40, width: width - 60 }]} onPress={() => setUser({ name: 'Rahul', plan: 'Silver', avatar: 'R' })}>
-        <Text style={styles.btnPrimaryText}>Go to Dashboard</Text>
+      <TouchableOpacity activeOpacity={0.85} style={[s.btn, { position: 'absolute', bottom: 48, width: width - 48 }]} onPress={() => setUser({ name: 'Rahul', plan: 'Silver', avatar: 'R' })}>
+        <Text style={s.btnText}>Go to Dashboard</Text>
       </TouchableOpacity>
     </Animated.View>
   );
 };
 
-// --- MAIN APP TABS ---
-const BarChart = () => {
-  const days = [
-    { day: 'M', val: 40, color: '#3B82F6' },
-    { day: 'T', val: 70, color: '#3B82F6' },
-    { day: 'W', val: 0, color: '#EF4444' }, // disrupted
-    { day: 'T', val: 80, color: '#3B82F6' },
-    { day: 'F', val: 100, color: '#3B82F6' },
-    { day: 'S', val: 90, color: '#3B82F6' },
-    { day: 'S', val: 20, color: '#E2E8F0' }, // pending
-  ];
-  return (
-    <View style={styles.chartArea}>
-      {days.map((d, i) => (
-        <View key={i} style={styles.chartCol}>
-          <View style={{ height: 100, justifyContent: 'flex-end', width: 24 }}>
-            <View style={[{ height: `${d.val}%`, backgroundColor: d.color, borderRadius: 6, width: '100%' }]} />
-          </View>
-          <Text style={styles.chartLabel}>{d.day}</Text>
+// ═══════════════════════════════════════════
+// MAIN APP TABS
+// ═══════════════════════════════════════════
+const MiniBar = ({ days }) => (
+  <View style={{ flexDirection: 'row', justifyContent: 'space-between', height: 110, alignItems: 'flex-end' }}>
+    {days.map((d, i) => (
+      <View key={i} style={{ alignItems: 'center', flex: 1 }}>
+        <View style={{ height: 88, justifyContent: 'flex-end', width: 20 }}>
+          <View style={{ height: `${d.val}%`, backgroundColor: d.color, borderRadius: 6, width: '100%', minHeight: d.val > 0 ? 4 : 0 }} />
         </View>
-      ))}
-    </View>
-  );
-};
+        <Text style={{ color: T.textTertiary, fontSize: 11, marginTop: 6, fontWeight: '600' }}>{d.day}</Text>
+      </View>
+    ))}
+  </View>
+);
 
 const DashboardTab = () => {
   const { user, balance, triggerPayout, appState } = useStore();
-  const disruptedToday = appState === 'TRIGGERED' || appState === 'PAID';
+  const disrupted = appState === 'TRIGGERED' || appState === 'PAID';
+  const weekDays = [
+    { day: 'M', val: 40, color: T.primary }, { day: 'T', val: 70, color: T.primary },
+    { day: 'W', val: 0, color: T.risk }, { day: 'T', val: 80, color: T.primary },
+    { day: 'F', val: 100, color: T.primary }, { day: 'S', val: 90, color: T.primary },
+    { day: 'S', val: 20, color: T.border },
+  ];
   return (
-    <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-      <View style={styles.headerRow}>
-        <View>
-          <Text style={styles.dashGreet}>Good morning, {user.name} 👋</Text>
-          <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 6, gap: 8 }}>
-            <View style={styles.pillGreen}><Text style={{ color: '#10B981', fontSize: 11, fontWeight: 'bold' }}>● Active</Text></View>
-            <View style={styles.pillSilver}><Text style={{ color: '#1E293B', fontSize: 11, fontWeight: 'bold' }}>Silver Tier</Text></View>
+    <ScrollView contentContainerStyle={s.tabScroll} showsVerticalScrollIndicator={false}>
+      {/* Greeting */}
+      <View style={s.greetRow}>
+        <View style={{ flex: 1 }}>
+          <Text style={s.greetName}>Good morning, {user.name}</Text>
+          <View style={{ flexDirection: 'row', gap: 8, marginTop: 8 }}>
+            <View style={s.chipSuccess}><Text style={s.chipSuccessText}>● Active</Text></View>
+            <View style={s.chipNeutral}><Text style={s.chipNeutralText}>Silver Tier</Text></View>
           </View>
         </View>
-        <View style={styles.avatarMini}><Text style={styles.avaText}>{user.avatar}</Text></View>
+        <View style={s.avatar}><Text style={s.avatarLetter}>{user.avatar}</Text></View>
       </View>
 
-      <View style={[styles.statusCardBig, { borderColor: disruptedToday ? '#EF4444' : '#10B981', backgroundColor: disruptedToday ? 'rgba(239,68,68,0.05)' : '#FFFFFF' }]}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 12 }}>
-          <Ionicons name={disruptedToday ? "alert-circle" : "checkmark-circle"} size={28} color={disruptedToday ? "#EF4444" : "#10B981"} />
-          <Text style={{ fontSize: 18, color: '#1E293B', fontWeight: 'bold' }}>{disruptedToday ? 'Disruption Detected' : 'No Disruption'}</Text>
+      {/* Status Card */}
+      <View style={[s.card, s.statusCard, disrupted && { borderColor: T.risk, backgroundColor: T.riskLight }]}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+          <View style={[s.statusIcon, disrupted && { backgroundColor: T.riskLight }]}>
+            <Ionicons name={disrupted ? "alert-circle" : "checkmark-circle"} size={24} color={disrupted ? T.risk : T.success} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={s.statusTitle}>{disrupted ? 'Disruption Detected' : 'No Disruption'}</Text>
+            <Text style={s.statusSub}>{disrupted ? (appState === 'PAID' ? 'Payout Paid' : 'Payout Processing...') : 'Conditions are normal in your zone.'}</Text>
+          </View>
         </View>
-        {disruptedToday && <Text style={{ color: '#EF4444', marginBottom: 8, fontWeight: '600' }}>Heavy Rain — Rainfall {'>'} 15mm/hr</Text>}
-        <Text style={{ color: '#64748B' }}>{disruptedToday ? (appState === 'PAID' ? 'Payout Paid' : 'Payout Processing...') : 'Conditions are normal in your zone. Safe rides!'}</Text>
       </View>
 
-      <Text style={styles.sectionHeader}>Weekly Earnings Tracker</Text>
-      <View style={styles.trackerCard}>
+      {/* Weekly Earnings */}
+      <Text style={s.sectionTitle}>Weekly Earnings</Text>
+      <View style={[s.card, { padding: 20 }]}>
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 20 }}>
           <View>
-            <Text style={{ color: '#64748B', fontSize: 12 }}>Total this week</Text>
-            <Text style={{ color: '#1E293B', fontSize: 24, fontWeight: '800' }}>₹{balance}</Text>
+            <Text style={s.metaLabel}>Total this week</Text>
+            <Text style={s.bigNum}>₹{balance.toLocaleString()}</Text>
           </View>
           <View style={{ alignItems: 'flex-end' }}>
-            <Text style={{ color: '#64748B', fontSize: 12 }}>Disrupted days</Text>
-            <Text style={{ color: '#EF4444', fontSize: 16, fontWeight: '800' }}>1 Day</Text>
+            <Text style={s.metaLabel}>Disrupted</Text>
+            <Text style={[s.bigNum, { fontSize: 18, color: T.risk }]}>1 Day</Text>
           </View>
         </View>
-        <BarChart />
+        <MiniBar days={weekDays} />
       </View>
 
-      <View style={{ flexDirection: 'row', gap: 10, marginTop: 20 }}>
-        {[{ title: 'Payouts', val: '₹450' }, { title: 'Disruptions', val: '1' }, { title: 'Weeks Active', val: '12' }].map((s, i) => (
-          <View key={i} style={styles.statSquare}>
-            <Text style={{ color: '#1E293B', fontWeight: 'bold', fontSize: 18 }}>{s.val}</Text>
-            <Text style={{ color: '#64748B', fontSize: 11, marginTop: 4 }}>{s.title}</Text>
+      {/* Quick Stats */}
+      <View style={{ flexDirection: 'row', gap: 8, marginTop: 16 }}>
+        {[{ t: 'Payouts', v: '₹450', c: T.success }, { t: 'Disruptions', v: '1', c: T.risk }, { t: 'Weeks Active', v: '12', c: T.primary }].map((st, i) => (
+          <View key={i} style={[s.card, s.statCard]}>
+            <Text style={[s.statVal, { color: st.c }]}>{st.v}</Text>
+            <Text style={s.statLabel}>{st.t}</Text>
           </View>
         ))}
       </View>
 
-      <TouchableOpacity style={styles.devTrigger} onPress={triggerPayout}>
-        <Ionicons name="bug" size={14} color="#64748B" />
-        <Text style={{ color: '#64748B', fontSize: 12, marginLeft: 6 }}>Dev: Trigger Disruption Event</Text>
+      {/* Dev Trigger */}
+      <TouchableOpacity activeOpacity={0.7} style={s.devBtn} onPress={triggerPayout}>
+        <Ionicons name="flash" size={14} color={T.textTertiary} />
+        <Text style={{ color: T.textTertiary, fontSize: 12, marginLeft: 6 }}>Dev: Trigger Disruption</Text>
       </TouchableOpacity>
     </ScrollView>
   );
@@ -310,40 +356,40 @@ const HistoryTab = () => {
   const [expanded, setExpanded] = useState(null);
   const [activeFilter, setActiveFilter] = useState(0);
   return (
-    <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-      <Text style={styles.pageTitle}>Payout History</Text>
+    <ScrollView contentContainerStyle={s.tabScroll} showsVerticalScrollIndicator={false}>
+      <Text style={s.pageHeading}>Payout History</Text>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 20 }}>
         {['All', 'This Week', 'This Month', 'This Year'].map((t, i) => (
-          <TouchableOpacity key={i} activeOpacity={0.7} onPress={() => setActiveFilter(i)} style={[styles.filterPill, i===activeFilter && styles.filterPillActive]}>
-            <Text style={[styles.filterPillText, i===activeFilter && { color: '#fff' }]}>{t}</Text>
+          <TouchableOpacity key={i} activeOpacity={0.7} onPress={() => setActiveFilter(i)} style={[s.filterChip, i === activeFilter && s.filterChipActive]}>
+            <Text style={[s.filterChipText, i === activeFilter && { color: '#fff' }]}>{t}</Text>
           </TouchableOpacity>
         ))}
       </ScrollView>
-
       {recentPayouts.map(p => {
         const isExp = expanded === p.id;
         return (
-          <TouchableOpacity key={p.id} style={styles.historyCard} onPress={() => setExpanded(isExp ? null : p.id)} activeOpacity={0.9}>
+          <TouchableOpacity key={p.id} style={[s.card, { padding: 16, marginBottom: 10 }]} onPress={() => setExpanded(isExp ? null : p.id)} activeOpacity={0.9}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-                <View style={styles.iconCircle}><Ionicons name="rainy" size={20} color="#3B82F6" /></View>
+                <View style={s.iconBubble}><Ionicons name="rainy" size={18} color={T.primary} /></View>
                 <View>
-                  <Text style={{ color: '#1E293B', fontWeight: 'bold', fontSize: 16 }}>{p.reason}</Text>
-                  <Text style={{ color: '#64748B', fontSize: 12, marginTop: 2 }}>{p.date} • {p.zone}</Text>
+                  <Text style={{ color: T.textPrimary, fontWeight: '700', fontSize: 15 }}>{p.reason}</Text>
+                  <Text style={{ color: T.textTertiary, fontSize: 12, marginTop: 2 }}>{p.date} · {p.zone}</Text>
                 </View>
               </View>
               <View style={{ alignItems: 'flex-end' }}>
-                <Text style={{ color: '#10B981', fontWeight: 'bold', fontSize: 16 }}>+₹{p.amount}</Text>
-                <Text style={{ color: '#10B981', fontSize: 11, marginTop: 2 }}>{p.status}</Text>
+                <Text style={{ color: T.success, fontWeight: '800', fontSize: 15 }}>+₹{p.amount}</Text>
+                <Text style={{ color: T.success, fontSize: 11, marginTop: 2 }}>{p.status}</Text>
               </View>
             </View>
             {isExp && (
-              <Animated.View entering={FadeInUp} style={styles.expandedHistoryDetails}>
-                <Text style={styles.detailText}>Event ID: {p.eventId}</Text>
-                <Text style={styles.detailText}>Trigger: {p.details.threshold}</Text>
-                <Text style={styles.detailText}>GPS Validation: <Text style={{ color: '#10B981' }}>{p.details.gps}</Text></Text>
-                <Text style={styles.detailText}>Fraud Score: <Text style={{ color: '#10B981' }}>{p.details.fraud}</Text></Text>
-                <Text style={styles.detailText}>UPI Txn: TXN89274982739</Text>
+              <Animated.View entering={FadeInUp} style={s.expandArea}>
+                {[['Event ID', p.eventId], ['Trigger', p.details.threshold], ['GPS', p.details.gps], ['Fraud Score', p.details.fraud], ['UPI Txn', 'TXN89274982739']].map(([k, v], i) => (
+                  <View key={i} style={s.detailRow}>
+                    <Text style={s.detailK}>{k}</Text>
+                    <Text style={s.detailV}>{v}</Text>
+                  </View>
+                ))}
               </Animated.View>
             )}
           </TouchableOpacity>
@@ -353,36 +399,76 @@ const HistoryTab = () => {
   );
 };
 
-const AlertsTab = () => {
-  return (
-    <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-      <Text style={styles.pageTitle}>Disruption Alerts</Text>
-      
-      <View style={styles.alertCardActive}>
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-            <Ionicons name="warning" size={20} color="#F59E0B" />
-            <Text style={{ color: '#F59E0B', fontWeight: 'bold' }}>Heavy Rain Warning</Text>
-          </View>
-          <Text style={{ color: '#64748B', fontSize: 12 }}>Active</Text>
+const AlertsTab = () => (
+  <ScrollView contentContainerStyle={s.tabScroll} showsVerticalScrollIndicator={false}>
+    <Text style={s.pageHeading}>Disruption Alerts</Text>
+    <View style={[s.card, { borderLeftWidth: 3, borderLeftColor: T.warning, padding: 16 }]}>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+          <Ionicons name="warning" size={18} color={T.warning} />
+          <Text style={{ color: T.warning, fontWeight: '700', fontSize: 15 }}>Heavy Rain Warning</Text>
         </View>
-        <Text style={{ color: '#1E293B', marginTop: 10 }}>Zone: Koramangala, BLR</Text>
-        <Text style={{ color: '#64748B', fontSize: 12, marginTop: 4 }}>Detected at 12:45 PM. 240+ workers affected. Payout triggered in 15 mins if sustained.</Text>
+        <View style={s.chipWarning}><Text style={s.chipWarningText}>Active</Text></View>
+      </View>
+      <Text style={{ color: T.textPrimary, marginTop: 12, fontSize: 14 }}>Zone: Koramangala, BLR</Text>
+      <Text style={{ color: T.textTertiary, fontSize: 13, marginTop: 4, lineHeight: 19 }}>Detected at 12:45 PM. 240+ workers affected. Payout will trigger in 15 mins if sustained.</Text>
+    </View>
+
+    <Text style={[s.sectionTitle, { marginTop: 28 }]}>7-Day Risk Calendar</Text>
+    <View style={[s.card, { padding: 16 }]}>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 12 }}>
+        {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((d, i) => <Text key={i} style={s.calHead}>{d}</Text>)}
+      </View>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+        {[{ p: 10, c: T.success }, { p: 20, c: T.success }, { p: 72, c: T.risk }, { p: 15, c: T.success }, { p: 45, c: T.warning }, { p: 5, c: T.success }, { p: 10, c: T.success }].map((d, i) => (
+          <View key={i} style={[s.calCell, { backgroundColor: d.c }]}>
+            <Text style={{ color: '#fff', fontSize: 11, fontWeight: '700' }}>{d.p}%</Text>
+          </View>
+        ))}
+      </View>
+      <Text style={{ color: T.textTertiary, fontSize: 12, marginTop: 16, textAlign: 'center' }}>Weather risk forecast for your zone</Text>
+    </View>
+  </ScrollView>
+);
+
+const ForecastTab = () => {
+  const riskDays = [
+    { day: 'M', val: 78, color: T.risk }, { day: 'T', val: 56, color: T.warning },
+    { day: 'W', val: 34, color: T.primary }, { day: 'T', val: 72, color: T.risk },
+    { day: 'F', val: 20, color: T.success }, { day: 'S', val: 12, color: T.success },
+    { day: 'S', val: 65, color: T.warning },
+  ];
+  return (
+    <ScrollView contentContainerStyle={s.tabScroll} showsVerticalScrollIndicator={false}>
+      <Text style={s.pageHeading}>Next Week Forecast</Text>
+      <View style={[s.card, { borderWidth: 1, borderColor: T.primary, padding: 20 }]}>
+        <View style={{ flexDirection: 'row', gap: 10, alignItems: 'center', marginBottom: 16 }}>
+          <View style={[s.iconBubble, { backgroundColor: T.primaryLight }]}><Ionicons name="hardware-chip" size={18} color={T.primary} /></View>
+          <Text style={{ color: T.primary, fontWeight: '700', fontSize: 16 }}>ML Model Prediction</Text>
+        </View>
+        <View style={s.kvRow}><Text style={s.kvK}>Disruption Prob.</Text><Text style={[s.kvV, { color: T.risk }]}>78%</Text></View>
+        <View style={s.kvRow}><Text style={s.kvK}>Income at risk</Text><Text style={s.kvV}>₹1,200</Text></View>
+        <View style={[s.tipBox, { backgroundColor: T.primaryLight }]}>
+          <Text style={{ color: T.primary, fontSize: 13, fontWeight: '600', lineHeight: 19 }}>Recommendation: Maintain at least Silver tier this week due to heavy rains expected.</Text>
+        </View>
       </View>
 
-      <Text style={[styles.sectionHeader, { marginTop: 30 }]}>Disruption Calendar (7-Day Forecast)</Text>
-      <View style={styles.calendarCard}>
-        <View style={styles.calRow}>
-          {['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map((d,i)=><Text key={i} style={styles.calDayHead}>{d}</Text>)}
-        </View>
-        <View style={styles.calRow}>
-          {[ { p: 10, c: '#10B981' }, { p: 20, c: '#10B981' }, { p: 72, c: '#EF4444' }, { p: 15, c: '#10B981' }, { p: 45, c: '#F59E0B' }, { p: 5, c: '#10B981' }, { p: 10, c: '#10B981' } ].map((d, i) => (
-            <View key={i} style={[styles.calCell, { backgroundColor: d.c }]}>
-              <Text style={{ color: '#fff', fontSize: 11, fontWeight: 'bold' }}>{d.p}%</Text>
+      <Text style={[s.sectionTitle, { marginTop: 24 }]}>Daily Risk Probability</Text>
+      <View style={[s.card, { padding: 20 }]}>
+        <MiniBar days={riskDays} />
+      </View>
+
+      <Text style={[s.sectionTitle, { marginTop: 24 }]}>Risk Breakdown</Text>
+      <View style={[s.card, { padding: 20 }]}>
+        {[{ l: 'Rain', v: 72, c: T.primary }, { l: 'Heat', v: 8, c: T.warning }, { l: 'Traffic', v: 45, c: T.risk }, { l: 'AQI', v: 12, c: T.textTertiary }].map((b, i) => (
+          <View key={i} style={{ marginBottom: i < 3 ? 18 : 0 }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 }}>
+              <Text style={{ color: T.textSecondary, fontSize: 13 }}>{b.l}</Text>
+              <Text style={{ color: b.c, fontWeight: '700', fontSize: 13 }}>{b.v}%</Text>
             </View>
-          ))}
-        </View>
-        <Text style={{ color: '#64748B', fontSize: 12, marginTop: 16, textAlign: 'center' }}>Next 7-day weather risk forecast for your zone</Text>
+            <View style={s.progressTrack}><View style={[s.progressFill, { width: `${b.v}%`, backgroundColor: b.c }]} /></View>
+          </View>
+        ))}
       </View>
     </ScrollView>
   );
@@ -393,147 +479,107 @@ const ProfileTab = () => {
   const [waOn, setWaOn] = useState(true);
   const [pushOn, setPushOn] = useState(true);
 
+  const Section = ({ title, children }) => (
+    <View style={[s.card, { padding: 20, marginBottom: 12 }]}>
+      <Text style={s.secHead}>{title}</Text>
+      {children}
+    </View>
+  );
+
   return (
-    <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-      <Text style={styles.pageTitle}>Profile & Policy</Text>
-      <View style={styles.profileSectionCard}>
-        <Text style={styles.secTitleSmall}>My Policy</Text>
-        <View style={styles.secKV}><Text style={styles.secK}>Policy ID</Text><Text style={styles.secV}>GS-BLR-002847</Text></View>
-        <View style={styles.secKV}><Text style={styles.secK}>Tier</Text><Text style={[styles.secV, { color: '#64748B' }]}>Silver</Text></View>
-        <View style={styles.secKV}><Text style={styles.secK}>Premium</Text><Text style={styles.secV}>₹79/week</Text></View>
-        <View style={styles.secKV}><Text style={styles.secK}>Status</Text><Text style={[styles.secV, { color: '#10B981' }]}>Active</Text></View>
-      </View>
+    <ScrollView contentContainerStyle={s.tabScroll} showsVerticalScrollIndicator={false}>
+      <Text style={s.pageHeading}>Profile & Policy</Text>
 
-      <View style={styles.profileSectionCard}>
-        <Text style={styles.secTitleSmall}>My Details</Text>
-        <View style={styles.secKV}><Text style={styles.secK}>Name</Text><Text style={styles.secV}>Rahul Kumar</Text></View>
-        <View style={styles.secKV}><Text style={styles.secK}>Mobile</Text><Text style={styles.secV}>+91 98765 43210</Text></View>
-        <View style={styles.secKV}><Text style={styles.secK}>City</Text><Text style={styles.secV}>Bengaluru</Text></View>
-        <View style={styles.secKV}><Text style={styles.secK}>Zone</Text><Text style={styles.secV}>Koramangala</Text></View>
-        <View style={styles.secKV}><Text style={styles.secK}>Platform</Text><Text style={styles.secV}>Zomato & Swiggy</Text></View>
-        <View style={[styles.secKV, { alignItems: 'center' }]}><Text style={styles.secK}>UPI ID</Text><View style={{ flexDirection: 'row', gap: 6, alignItems: 'center' }}><Text style={styles.secV}>rahul@okicici</Text><Ionicons name="pencil" size={14} color="#64748B" /></View></View>
-      </View>
+      <Section title="My Policy">
+        {[['Policy ID', 'ZR-BLR-002847'], ['Tier', 'Silver'], ['Premium', '₹79/week'], ['Status', 'Active']].map(([k, v], i) => (
+          <View key={i} style={s.kvRow}><Text style={s.kvK}>{k}</Text><Text style={[s.kvV, v === 'Active' && { color: T.success }]}>{v}</Text></View>
+        ))}
+      </Section>
 
-      <View style={styles.profileSectionCard}>
-        <Text style={styles.secTitleSmall}>Income Report Card (YTD)</Text>
-        <View style={styles.secKV}><Text style={styles.secK}>Total Earnings</Text><Text style={styles.secV}>₹48,500</Text></View>
-        <View style={styles.secKV}><Text style={styles.secK}>Disrupted Days</Text><Text style={styles.secV}>8</Text></View>
-        <View style={styles.secKV}><Text style={styles.secK}>Payouts Received</Text><Text style={[styles.secV, { color: '#10B981' }]}>₹2,800</Text></View>
-        <View style={{ backgroundColor: 'rgba(16,185,129,0.1)', padding: 12, borderRadius: 8, marginTop: 10 }}>
-          <Text style={{ color: '#10B981', textAlign: 'center', fontWeight: 'bold' }}>ZeroRukawat has saved you ₹2,800 this year</Text>
+      <Section title="My Details">
+        {[['Name', 'Rahul Kumar'], ['Mobile', '+91 98765 43210'], ['City', 'Bengaluru'], ['Zone', 'Koramangala'], ['Platform', 'Zomato & Swiggy']].map(([k, v], i) => (
+          <View key={i} style={s.kvRow}><Text style={s.kvK}>{k}</Text><Text style={s.kvV}>{v}</Text></View>
+        ))}
+      </Section>
+
+      <Section title="Income Report (YTD)">
+        {[['Total Earnings', '₹48,500'], ['Disrupted Days', '8'], ['Payouts Received', '₹2,800']].map(([k, v], i) => (
+          <View key={i} style={s.kvRow}><Text style={s.kvK}>{k}</Text><Text style={[s.kvV, v === '₹2,800' && { color: T.success }]}>{v}</Text></View>
+        ))}
+        <View style={[s.tipBox, { backgroundColor: T.successLight, marginTop: 12 }]}>
+          <Text style={{ color: T.success, textAlign: 'center', fontWeight: '700', fontSize: 13 }}>ZeroRukawat saved you ₹2,800 this year</Text>
         </View>
-      </View>
+      </Section>
 
-      <View style={styles.profileSectionCard}>
-        <Text style={styles.secTitleSmall}>Referral</Text>
-        <Text style={{ color: '#64748B', fontSize: 13, marginBottom: 12 }}>Refer a partner, earn ₹50</Text>
+      <Section title="Referral">
+        <Text style={{ color: T.textTertiary, fontSize: 13, marginBottom: 12 }}>Refer a partner, earn ₹50</Text>
         <View style={{ flexDirection: 'row', gap: 10 }}>
-          <View style={{ flex: 1, backgroundColor: '#F1F5F9', padding: 12, borderRadius: 8, borderWidth: 1, borderColor: '#E2E8F0' }}>
-            <Text style={{ color: '#1E293B', textAlign: 'center', letterSpacing: 2, fontWeight: 'bold' }}>GIGRAHUL50</Text>
-          </View>
-          <TouchableOpacity activeOpacity={0.7} onPress={() => alert('Referral code copied to clipboard!')} style={{ backgroundColor: '#3B82F6', paddingHorizontal: 20, justifyContent: 'center', borderRadius: 8 }}>
-            <Ionicons name="copy" size={20} color="#fff" />
+          <View style={s.codeBox}><Text style={s.codeText}>GIGRAHUL50</Text></View>
+          <TouchableOpacity activeOpacity={0.7} onPress={() => alert('Copied!')} style={s.copyBtn}>
+            <Ionicons name="copy" size={18} color="#fff" />
           </TouchableOpacity>
         </View>
-      </View>
+      </Section>
 
-      <View style={styles.profileSectionCard}>
-        <Text style={styles.secTitleSmall}>Settings</Text>
-        <TouchableOpacity style={[styles.secKV, { alignItems: 'center' }]} activeOpacity={0.7}>
-          <Text style={styles.secK}>Language</Text><Text style={styles.secV}>English ▾</Text>
+      <Section title="Settings">
+        <TouchableOpacity style={s.settingRow} activeOpacity={0.7}>
+          <Text style={s.kvK}>Language</Text><Text style={s.kvV}>English ▾</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={[styles.secKV, { alignItems: 'center' }]} activeOpacity={0.7} onPress={() => setWaOn(!waOn)}>
-          <Text style={styles.secK}>WhatsApp Notifications</Text><Ionicons name={waOn ? "toggle" : "toggle-outline"} size={32} color={waOn ? "#10B981" : "#94A3B8"} />
+        <TouchableOpacity style={s.settingRow} activeOpacity={0.7} onPress={() => setWaOn(!waOn)}>
+          <Text style={s.kvK}>WhatsApp Alerts</Text>
+          <Ionicons name={waOn ? "toggle" : "toggle-outline"} size={30} color={waOn ? T.success : T.textTertiary} />
         </TouchableOpacity>
-        <TouchableOpacity style={[styles.secKV, { alignItems: 'center', marginBottom: 0 }]} activeOpacity={0.7} onPress={() => setPushOn(!pushOn)}>
-          <Text style={styles.secK}>Push Notifications</Text><Ionicons name={pushOn ? "toggle" : "toggle-outline"} size={32} color={pushOn ? "#10B981" : "#94A3B8"} />
+        <TouchableOpacity style={[s.settingRow, { marginBottom: 0 }]} activeOpacity={0.7} onPress={() => setPushOn(!pushOn)}>
+          <Text style={s.kvK}>Push Notifications</Text>
+          <Ionicons name={pushOn ? "toggle" : "toggle-outline"} size={30} color={pushOn ? T.success : T.textTertiary} />
         </TouchableOpacity>
-      </View>
+      </Section>
 
-      <TouchableOpacity style={styles.logoutBtn} activeOpacity={0.6} onPress={() => setUser(null)}>
-        <Text style={{ color: '#EF4444', fontWeight: 'bold' }}>Log Out</Text>
+      <TouchableOpacity style={s.logoutBtn} activeOpacity={0.65} onPress={() => setUser(null)}>
+        <Ionicons name="log-out-outline" size={18} color={T.risk} />
+        <Text style={{ color: T.risk, fontWeight: '700', marginLeft: 8 }}>Log Out</Text>
       </TouchableOpacity>
     </ScrollView>
   );
 };
 
-const ForecastTab = () => {
-  return (
-    <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-      <Text style={styles.pageTitle}>Next Week Forecast</Text>
-      
-      <View style={[styles.profileSectionCard, { borderColor: '#3B82F6', borderWidth: 1 }]}>
-        <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center', marginBottom: 16 }}>
-          <Ionicons name="hardware-chip" size={20} color="#3B82F6" />
-          <Text style={{ color: '#3B82F6', fontWeight: 'bold', fontSize: 16 }}>ML Model Prediction</Text>
-        </View>
-        <View style={styles.secKV}><Text style={styles.secK}>Disruption Prob.</Text><Text style={[styles.secV, { color: '#EF4444' }]}>78%</Text></View>
-        <View style={styles.secKV}><Text style={styles.secK}>Income at risk</Text><Text style={styles.secV}>₹1,200</Text></View>
-        <View style={{ backgroundColor: 'rgba(59,130,246,0.1)', padding: 12, borderRadius: 8, marginTop: 10 }}>
-          <Text style={{ color: '#3B82F6', fontSize: 13, fontWeight: '600' }}>💡 Recommendation: Maintain at least Silver tier this week due to heavy rains expected.</Text>
-        </View>
-      </View>
-
-      <Text style={[styles.sectionHeader, { marginTop: 24 }]}>Daily Risk Probability</Text>
-      <View style={styles.trackerCard}>
-        <View style={styles.chartArea}>
-          {[ { day: 'M', val: 78, color: '#EF4444' }, { day: 'T', val: 56, color: '#F59E0B' }, { day: 'W', val: 34, color: '#3B82F6' }, { day: 'T', val: 72, color: '#EF4444' }, { day: 'F', val: 20, color: '#10B981' }, { day: 'S', val: 12, color: '#10B981' }, { day: 'S', val: 65, color: '#F59E0B' } ].map((d, i) => (
-            <View key={i} style={styles.chartCol}>
-              <View style={{ height: 100, justifyContent: 'flex-end', width: 24 }}>
-                <View style={[{ height: `${d.val}%`, backgroundColor: d.color, borderRadius: 6, width: '100%' }]} />
-              </View>
-              <Text style={styles.chartLabel}>{d.day}</Text>
-            </View>
-          ))}
-        </View>
-      </View>
-
-      <Text style={[styles.sectionHeader, { marginTop: 24 }]}>Probability Breakdown</Text>
-      <View style={styles.profileSectionCard}>
-        {[ { label: 'Rain', val: '72%', w: '72%', col: '#3B82F6' }, { label: 'Heat', val: '8%', w: '8%', col: '#F59E0B' }, { label: 'Traffic', val: '45%', w: '45%', col: '#EF4444' }, { label: 'AQI', val: '12%', w: '12%', col: '#94A3B8' }].map((b, i) => (
-          <View key={i} style={{ marginBottom: 16 }}>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 }}><Text style={{ color: '#1E293B' }}>{b.label}</Text><Text style={{ color: b.col, fontWeight: 'bold' }}>{b.val}</Text></View>
-            <View style={{ height: 8, backgroundColor: '#F1F5F9', borderRadius: 4 }}><View style={{ width: b.w, height: '100%', backgroundColor: b.col, borderRadius: 4 }} /></View>
-          </View>
-        ))}
-      </View>
-    </ScrollView>
-  );
-};
-
-
+// ═══════════════════════════════════════════
+// FULLSCREEN OVERLAY
+// ═══════════════════════════════════════════
 const FullScreenDisruption = () => {
   const { appState } = useStore();
   if (appState !== 'TRIGGERED' && appState !== 'PAID') return null;
-
   return (
-    <Animated.View entering={FadeIn} style={styles.fullScreenOverlay}>
+    <Animated.View entering={FadeIn} style={s.overlay}>
       {appState === 'TRIGGERED' ? (
-        <View style={styles.centered}>
-          <ActivityIndicator size="large" color="#3B82F6" />
-          <Text style={styles.fullScreenTitle}>Processing Payout</Text>
-          <Text style={styles.fullScreenSub}>Validating disruption parameters...</Text>
+        <View style={s.overlayInner}>
+          <ActivityIndicator size="large" color={T.primary} />
+          <Text style={s.overlayTitle}>Processing Payout</Text>
+          <Text style={s.overlaySub}>Validating disruption parameters...</Text>
         </View>
       ) : (
-        <Animated.View entering={FadeInUp} style={styles.centered}>
-          <View style={styles.successCircle}><Ionicons name="checkmark" size={60} color="#10B981" /></View>
-          <Text style={styles.successTitle}>₹450 Paid!</Text>
-          <Text style={styles.successSub}>For Severe Heatwave disruption.</Text>
+        <Animated.View entering={FadeInUp} style={s.overlayInner}>
+          <View style={s.confirmCircle}><Ionicons name="checkmark" size={48} color={T.success} /></View>
+          <Text style={[s.overlayTitle, { color: T.success, fontSize: 32, fontWeight: '900' }]}>₹450 Paid!</Text>
+          <Text style={s.overlaySub}>For Severe Heatwave disruption.</Text>
         </Animated.View>
       )}
     </Animated.View>
   );
 };
 
+// ═══════════════════════════════════════════
+// APP SHELL
+// ═══════════════════════════════════════════
 export default function App() {
   const { user, onboardingStage, activeTab, setActiveTab } = useStore();
 
   if (!user) {
     return (
-      <View style={styles.container}>
+      <View style={s.root}>
         <StatusBar style="dark" />
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
-          <View style={styles.safeAreaSpacing} />
+          <View style={{ height: Platform.OS === 'ios' ? 60 : 44 }} />
           {onboardingStage === 'METHOD_SELECT' && <MethodSelect />}
           {onboardingStage === 'PHONE_INPUT' && <PhoneInput />}
           {onboardingStage === 'OTP_INPUT' && <OTPInput />}
@@ -547,15 +593,15 @@ export default function App() {
   }
 
   const tabs = [
-    { id: 'HOME', icon: 'home' },
-    { id: 'HISTORY', icon: 'time' },
-    { id: 'FORECAST', icon: 'analytics' },
-    { id: 'ALERTS', icon: 'notifications' },
-    { id: 'PROFILE', icon: 'person' },
+    { id: 'HOME', icon: 'home-outline', iconActive: 'home', label: 'Home' },
+    { id: 'HISTORY', icon: 'time-outline', iconActive: 'time', label: 'History' },
+    { id: 'FORECAST', icon: 'analytics-outline', iconActive: 'analytics', label: 'Forecast' },
+    { id: 'ALERTS', icon: 'notifications-outline', iconActive: 'notifications', label: 'Alerts' },
+    { id: 'PROFILE', icon: 'person-outline', iconActive: 'person', label: 'Profile' },
   ];
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={s.root}>
       <StatusBar style="dark" />
       <View style={{ flex: 1 }}>
         {activeTab === 'HOME' && <DashboardTab />}
@@ -564,95 +610,138 @@ export default function App() {
         {activeTab === 'ALERTS' && <AlertsTab />}
         {activeTab === 'PROFILE' && <ProfileTab />}
       </View>
-      
-      <View style={styles.bottomNav}>
-        {tabs.map((t) => (
-          <TouchableOpacity key={t.id} style={styles.navItem} onPress={() => setActiveTab(t.id)}>
-            <Ionicons name={t.icon} size={24} color={activeTab === t.id ? '#3B82F6' : '#94A3B8'} />
-            {activeTab === t.id && <View style={styles.navIndicator} />}
-          </TouchableOpacity>
-        ))}
+      <View style={s.navBar}>
+        {tabs.map((t) => {
+          const active = activeTab === t.id;
+          return (
+            <TouchableOpacity key={t.id} style={s.navTab} onPress={() => setActiveTab(t.id)} activeOpacity={0.7}>
+              <Ionicons name={active ? t.iconActive : t.icon} size={22} color={active ? T.primary : T.textTertiary} />
+              <Text style={[s.navLabel, active && { color: T.primary, fontWeight: '700' }]}>{t.label}</Text>
+            </TouchableOpacity>
+          );
+        })}
       </View>
       <FullScreenDisruption />
     </SafeAreaView>
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F8FAFC' },
-  safeAreaSpacing: { height: Platform.OS === 'ios' ? 60 : 40 },
-  onboardingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 30 },
-  onboardingContainerPad: { flex: 1, paddingHorizontal: 20 },
-  scrollForm: { padding: 24, paddingBottom: 50 },
-  backBtn: { alignSelf: 'flex-start', marginBottom: 20, padding: 8, borderRadius: 12, backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#E2E8F0' },
-  onboardingTitle: { color: '#1E293B', fontSize: 28, fontWeight: 'bold', textAlign: 'center' },
-  onboardingSub: { color: '#64748B', fontSize: 16, textAlign: 'center', marginTop: 10, marginBottom: 20, lineHeight: 24 },
-  btnPrimary: { backgroundColor: '#3B82F6', flexDirection: 'row', paddingVertical: 18, borderRadius: 16, justifyContent: 'center', alignItems: 'center' },
-  btnPrimaryText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
-  btnSecondary: { backgroundColor: '#FFFFFF', flexDirection: 'row', paddingVertical: 18, borderRadius: 16, justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#E2E8F0', width: '100%' },
-  btnSecondaryText: { color: '#1E293B', fontSize: 16, fontWeight: 'bold' },
-  inputGroup: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#FFFFFF', borderRadius: 16, marginTop: 20, borderWidth: 1, borderColor: '#E2E8F0', width: '100%' },
-  inputPrefix: { color: '#1E293B', fontSize: 18, padding: 16, fontWeight: 'bold', borderRightWidth: 1, borderRightColor: '#E2E8F0' },
-  input: { flex: 1, color: '#1E293B', fontSize: 18, padding: 16, fontWeight: 'bold' },
-  otpInput: { backgroundColor: '#FFFFFF', borderRadius: 16, marginTop: 20, borderWidth: 1, borderColor: '#E2E8F0', width: '60%', color: '#1E293B', fontSize: 32, fontWeight: 'bold', padding: 16, letterSpacing: 20 },
-  label: { color: '#64748B', fontSize: 14, marginBottom: 8, fontWeight: '600' },
-  formInput: { backgroundColor: '#FFFFFF', borderRadius: 12, borderWidth: 1, borderColor: '#E2E8F0', color: '#1E293B', padding: 14, fontSize: 16 },
-  tierCard: { borderWidth: 2, borderRadius: 16, padding: 20, marginBottom: 16, width: '100%' },
-  pricePill: { backgroundColor: 'rgba(0,0,0,0.05)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12 },
-  tierStatText: { color: '#64748B', fontSize: 14, marginBottom: 6 },
-  aiBadge: { flexDirection: 'row', backgroundColor: 'rgba(59,130,246,0.1)', padding: 12, borderRadius: 12, gap: 10, marginBottom: 10 },
-  aiBadgeText: { color: '#3B82F6', fontSize: 13, flex: 1, lineHeight: 18 },
-  invoiceCard: { backgroundColor: '#FFFFFF', padding: 24, borderRadius: 16, width: '100%', marginTop: 30, borderWidth: 1, borderColor: '#E2E8F0' },
-  invoiceLabel: { color: '#64748B', fontSize: 14, marginTop: 12 },
-  invoiceValue: { color: '#1E293B', fontSize: 18, fontWeight: 'bold', marginTop: 2 },
-  
-  // Dashboard & Tabs
-  scrollContent: { padding: 20, paddingTop: Platform.OS==='ios'?10:40, paddingBottom: 120 },
-  headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 },
-  dashGreet: { color: '#1E293B', fontSize: 24, fontWeight: 'bold' },
-  pillGreen: { backgroundColor: 'rgba(16,185,129,0.1)', borderColor: 'rgba(16,185,129,0.2)', borderWidth: 1, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 12 },
-  pillSilver: { backgroundColor: '#F1F5F9', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 12, borderColor: '#E2E8F0', borderWidth: 1 },
-  avatarMini: { width: 44, height: 44, borderRadius: 22, backgroundColor: '#FFFFFF', justifyContent: 'center', alignItems: 'center', borderWidth: 2, borderColor: '#3B82F6' },
-  avaText: { color: '#3B82F6', fontWeight: 'bold', fontSize: 16 },
-  statusCardBig: { padding: 20, borderRadius: 20, borderWidth: 1, marginBottom: 24 },
-  sectionHeader: { color: '#1E293B', fontSize: 18, fontWeight: 'bold', marginBottom: 16 },
-  trackerCard: { backgroundColor: '#FFFFFF', padding: 20, borderRadius: 20, borderWidth: 1, borderColor: '#E2E8F0' },
-  chartArea: { flexDirection: 'row', justifyContent: 'space-between', height: 120, alignItems: 'flex-end' },
-  chartCol: { alignItems: 'center', width: 30 },
-  chartLabel: { color: '#64748B', fontSize: 12, marginTop: 8 },
-  statSquare: { flex: 1, backgroundColor: '#FFFFFF', padding: 16, borderRadius: 16, borderWidth: 1, borderColor: '#E2E8F0', alignItems: 'center' },
-  devTrigger: { marginTop: 30, padding: 12, borderRadius: 12, borderWidth: 1, borderColor: '#E2E8F0', flexDirection: 'row', justifyContent: 'center', borderStyle: 'dashed', backgroundColor: '#FFFFFF' },
-  
-  bottomNav: { position: 'absolute', bottom: 0, left: 0, right: 0, height: 80, backgroundColor: 'rgba(255,255,255,0.95)', flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center', paddingBottom: Platform.OS === 'ios' ? 20 : 0, borderTopWidth: 1, borderTopColor: '#E2E8F0' },
-  navItem: { alignItems: 'center', justifyContent: 'center', height: '100%', width: 60 },
-  navIndicator: { width: 4, height: 4, borderRadius: 2, backgroundColor: '#3B82F6', marginTop: 4 },
-  
-  fullScreenOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(248,250,252,0.95)', justifyContent: 'center', alignItems: 'center', zIndex: 100 },
-  centered: { alignItems: 'center', padding: 30 },
-  fullScreenTitle: { color: '#1E293B', fontSize: 24, fontWeight: 'bold', marginTop: 24 },
-  fullScreenSub: { color: '#64748B', fontSize: 16, marginTop: 12 },
-  successCircle: { width: 100, height: 100, borderRadius: 50, backgroundColor: 'rgba(16,185,129,0.1)', borderWidth: 3, borderColor: '#10B981', alignItems: 'center', justifyContent: 'center' },
-  successTitle: { color: '#10B981', fontSize: 36, fontWeight: '900', marginTop: 24 },
-  
-  pageTitle: { color: '#1E293B', fontSize: 28, fontWeight: 'bold', marginBottom: 20 },
-  filterPill: { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20, backgroundColor: '#FFFFFF', marginRight: 10, borderWidth: 1, borderColor: '#E2E8F0' },
-  filterPillActive: { backgroundColor: '#3B82F6', borderColor: '#3B82F6' },
-  filterPillText: { color: '#64748B', fontWeight: '600' },
-  historyCard: { backgroundColor: '#FFFFFF', padding: 16, borderRadius: 16, marginBottom: 12, borderWidth: 1, borderColor: '#E2E8F0' },
-  iconCircle: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(59,130,246,0.1)', justifyContent: 'center', alignItems: 'center' },
-  expandedHistoryDetails: { marginTop: 16, paddingTop: 16, borderTopWidth: 1, borderTopColor: '#E2E8F0', gap: 6 },
-  detailText: { color: '#64748B', fontSize: 13 },
-  
-  alertCardActive: { backgroundColor: 'rgba(245,158,11,0.05)', padding: 16, borderRadius: 16, borderWidth: 1, borderColor: 'rgba(245,158,11,0.3)' },
-  calendarCard: { backgroundColor: '#FFFFFF', padding: 16, borderRadius: 16, borderWidth: 1, borderColor: '#E2E8F0' },
-  calRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 10 },
-  calDayHead: { color: '#64748B', fontSize: 12, width: 35, textAlign: 'center', fontWeight: 'bold' },
-  calCell: { width: 35, height: 35, borderRadius: 8, justifyContent: 'center', alignItems: 'center' },
-  
-  profileSectionCard: { backgroundColor: '#FFFFFF', padding: 20, borderRadius: 16, marginBottom: 16, borderWidth: 1, borderColor: '#E2E8F0' },
-  secTitleSmall: { color: '#1E293B', fontSize: 16, fontWeight: 'bold', marginBottom: 16 },
-  secKV: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 12 },
-  secK: { color: '#64748B' },
-  secV: { color: '#1E293B', fontWeight: '600' },
-  logoutBtn: { padding: 16, borderRadius: 16, borderWidth: 1, borderColor: '#EF4444', backgroundColor: 'rgba(239,68,68,0.05)', alignItems: 'center', marginTop: 20 }
+// ═══════════════════════════════════════════
+// STYLES
+// ═══════════════════════════════════════════
+const s = StyleSheet.create({
+  root: { flex: 1, backgroundColor: T.bgSoft },
+
+  // ─── Onboarding ───
+  onboardCenter: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 24 },
+  onboardPad: { flex: 1, paddingHorizontal: 24 },
+  logoBadge: { width: 72, height: 72, borderRadius: 20, backgroundColor: T.primaryLight, justifyContent: 'center', alignItems: 'center', marginBottom: 20, ...T.shadow2 },
+  heroTitle: { color: T.textPrimary, fontSize: 32, fontWeight: '800', textAlign: 'center', letterSpacing: -0.5 },
+  heroSub: { color: T.textSecondary, fontSize: 15, textAlign: 'center', marginTop: 12, lineHeight: 22 },
+  stepTitle: { color: T.textPrimary, fontSize: 26, fontWeight: '800', textAlign: 'center' },
+  stepSub: { color: T.textSecondary, fontSize: 15, textAlign: 'center', marginTop: 8, marginBottom: 20, lineHeight: 22 },
+  backChip: { alignSelf: 'flex-start', marginBottom: 24, padding: 10, borderRadius: 12, backgroundColor: T.bg, borderWidth: 1, borderColor: T.border, ...T.shadow1 },
+  successBanner: { flexDirection: 'row', alignItems: 'center', backgroundColor: T.successLight, paddingHorizontal: 16, paddingVertical: 10, borderRadius: 12, marginBottom: 20 },
+
+  // ─── Buttons ───
+  btn: { backgroundColor: T.primary, flexDirection: 'row', paddingVertical: 16, borderRadius: 14, justifyContent: 'center', alignItems: 'center', gap: 10, width: '100%', ...T.shadow2 },
+  btnText: { color: '#fff', fontSize: 16, fontWeight: '700' },
+  btnOutline: { backgroundColor: T.bg, flexDirection: 'row', paddingVertical: 16, borderRadius: 14, justifyContent: 'center', alignItems: 'center', gap: 10, borderWidth: 1.5, borderColor: T.border, width: '100%' },
+
+  // ─── Inputs ───
+  phoneRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: T.bg, borderRadius: 14, marginTop: 24, borderWidth: 1.5, borderColor: T.border, width: '100%', ...T.shadow1 },
+  prefixBox: { paddingHorizontal: 16, paddingVertical: 16, borderRightWidth: 1, borderRightColor: T.border },
+  prefixText: { color: T.textPrimary, fontSize: 17, fontWeight: '700' },
+  phoneInput: { flex: 1, color: T.textPrimary, fontSize: 17, padding: 16, fontWeight: '700' },
+  otpField: { backgroundColor: T.bg, borderRadius: 14, marginTop: 24, borderWidth: 1.5, borderColor: T.border, width: '55%', color: T.textPrimary, fontSize: 28, fontWeight: '800', padding: 16, letterSpacing: 16, ...T.shadow1 },
+  formScroll: { padding: 24, paddingBottom: 48 },
+  fieldLabel: { color: T.textSecondary, fontSize: 13, marginBottom: 6, fontWeight: '600' },
+  fieldInput: { backgroundColor: T.bg, borderRadius: 12, borderWidth: 1.5, borderColor: T.border, color: T.textPrimary, padding: 14, fontSize: 15, fontWeight: '500' },
+
+  // ─── Plans ───
+  planCard: { borderWidth: 1.5, borderColor: T.border, borderRadius: 16, padding: 20, marginBottom: 12, width: '100%', backgroundColor: T.bg, ...T.shadow1 },
+  planTitle: { color: T.textPrimary, fontSize: 18, fontWeight: '800' },
+  planEarn: { color: T.textTertiary, fontSize: 13, marginTop: 2 },
+  priceBadge: { backgroundColor: T.bgMuted, paddingHorizontal: 14, paddingVertical: 6, borderRadius: 20 },
+  priceText: { color: T.textPrimary, fontWeight: '700', fontSize: 14 },
+  planRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 },
+  planLabel: { color: T.textTertiary, fontSize: 13 },
+  planVal: { color: T.textPrimary, fontWeight: '600', fontSize: 13 },
+  aiTip: { flexDirection: 'row', backgroundColor: T.primaryLight, padding: 14, borderRadius: 12, gap: 10, marginTop: 8 },
+  aiTipText: { color: T.primary, fontSize: 13, flex: 1, lineHeight: 19 },
+  finePrint: { color: T.textTertiary, fontSize: 12, marginTop: 16, textAlign: 'center' },
+
+  // ─── Confirmation ───
+  confirmCircle: { width: 88, height: 88, borderRadius: 44, backgroundColor: T.successLight, borderWidth: 3, borderColor: T.success, alignItems: 'center', justifyContent: 'center' },
+  invoiceBox: { backgroundColor: T.bg, padding: 24, borderRadius: 16, width: '100%', marginTop: 28, borderWidth: 1, borderColor: T.border, ...T.shadow2 },
+  invoiceRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 14 },
+  invoiceK: { color: T.textTertiary, fontSize: 14 },
+  invoiceV: { color: T.textPrimary, fontSize: 15, fontWeight: '700' },
+
+  // ─── Dashboard ───
+  tabScroll: { padding: 20, paddingTop: Platform.OS === 'ios' ? 12 : 44, paddingBottom: 110 },
+  greetRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 },
+  greetName: { color: T.textPrimary, fontSize: 22, fontWeight: '800' },
+  chipSuccess: { backgroundColor: T.successLight, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20 },
+  chipSuccessText: { color: T.success, fontSize: 11, fontWeight: '700' },
+  chipNeutral: { backgroundColor: T.bgMuted, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20 },
+  chipNeutralText: { color: T.textSecondary, fontSize: 11, fontWeight: '700' },
+  chipWarning: { backgroundColor: T.warningLight, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20 },
+  chipWarningText: { color: T.warning, fontSize: 11, fontWeight: '700' },
+  avatar: { width: 44, height: 44, borderRadius: 22, backgroundColor: T.primaryLight, justifyContent: 'center', alignItems: 'center', borderWidth: 2, borderColor: T.primary },
+  avatarLetter: { color: T.primary, fontWeight: '800', fontSize: 16 },
+
+  // ─── Cards ───
+  card: { backgroundColor: T.card, borderRadius: 16, borderWidth: 1, borderColor: T.border, ...T.shadow1 },
+  statusCard: { padding: 16, borderColor: T.success, backgroundColor: T.bg, marginBottom: 24 },
+  statusIcon: { width: 40, height: 40, borderRadius: 12, backgroundColor: T.successLight, justifyContent: 'center', alignItems: 'center' },
+  statusTitle: { color: T.textPrimary, fontWeight: '700', fontSize: 16 },
+  statusSub: { color: T.textTertiary, fontSize: 13, marginTop: 2 },
+  sectionTitle: { color: T.textPrimary, fontSize: 17, fontWeight: '700', marginBottom: 12 },
+  metaLabel: { color: T.textTertiary, fontSize: 12, fontWeight: '500' },
+  bigNum: { color: T.textPrimary, fontSize: 24, fontWeight: '800', marginTop: 2 },
+  statCard: { flex: 1, padding: 16, alignItems: 'center' },
+  statVal: { fontWeight: '800', fontSize: 18 },
+  statLabel: { color: T.textTertiary, fontSize: 11, marginTop: 4, fontWeight: '500' },
+  devBtn: { marginTop: 28, padding: 14, borderRadius: 12, borderWidth: 1, borderColor: T.border, flexDirection: 'row', justifyContent: 'center', borderStyle: 'dashed', backgroundColor: T.bg },
+
+  // ─── History ───
+  pageHeading: { color: T.textPrimary, fontSize: 26, fontWeight: '800', marginBottom: 20 },
+  filterChip: { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20, backgroundColor: T.bg, marginRight: 8, borderWidth: 1, borderColor: T.border },
+  filterChipActive: { backgroundColor: T.primary, borderColor: T.primary },
+  filterChipText: { color: T.textSecondary, fontWeight: '600', fontSize: 13 },
+  iconBubble: { width: 38, height: 38, borderRadius: 12, backgroundColor: T.primaryLight, justifyContent: 'center', alignItems: 'center' },
+  expandArea: { marginTop: 14, paddingTop: 14, borderTopWidth: 1, borderTopColor: T.border },
+  detailRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 },
+  detailK: { color: T.textTertiary, fontSize: 13 },
+  detailV: { color: T.textPrimary, fontSize: 13, fontWeight: '600' },
+
+  // ─── Forecast & Alerts ───
+  kvRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 12 },
+  kvK: { color: T.textSecondary, fontSize: 14 },
+  kvV: { color: T.textPrimary, fontWeight: '600', fontSize: 14 },
+  tipBox: { padding: 14, borderRadius: 12, marginTop: 8 },
+  progressTrack: { height: 6, backgroundColor: T.bgMuted, borderRadius: 3 },
+  progressFill: { height: '100%', borderRadius: 3 },
+  calHead: { color: T.textTertiary, fontSize: 12, width: 38, textAlign: 'center', fontWeight: '700' },
+  calCell: { width: 38, height: 38, borderRadius: 10, justifyContent: 'center', alignItems: 'center' },
+
+  // ─── Profile ───
+  secHead: { color: T.textPrimary, fontSize: 15, fontWeight: '700', marginBottom: 16 },
+  settingRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 },
+  codeBox: { flex: 1, backgroundColor: T.bgMuted, padding: 14, borderRadius: 10, borderWidth: 1, borderColor: T.border },
+  codeText: { color: T.textPrimary, textAlign: 'center', letterSpacing: 3, fontWeight: '800', fontSize: 14 },
+  copyBtn: { backgroundColor: T.primary, paddingHorizontal: 18, justifyContent: 'center', borderRadius: 10 },
+  logoutBtn: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', padding: 16, borderRadius: 14, borderWidth: 1.5, borderColor: T.risk, backgroundColor: T.riskLight, marginTop: 16, marginBottom: 20 },
+
+  // ─── Bottom Nav ───
+  navBar: { position: 'absolute', bottom: 0, left: 0, right: 0, height: 76, backgroundColor: T.bg, flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center', paddingBottom: Platform.OS === 'ios' ? 16 : 0, borderTopWidth: 1, borderTopColor: T.border, ...T.shadow3 },
+  navTab: { alignItems: 'center', justifyContent: 'center', paddingTop: 8 },
+  navLabel: { color: T.textTertiary, fontSize: 10, marginTop: 3, fontWeight: '500' },
+
+  // ─── Overlay ───
+  overlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(255,255,255,0.96)', justifyContent: 'center', alignItems: 'center', zIndex: 100 },
+  overlayInner: { alignItems: 'center', padding: 32 },
+  overlayTitle: { color: T.textPrimary, fontSize: 24, fontWeight: '800', marginTop: 24 },
+  overlaySub: { color: T.textSecondary, fontSize: 15, marginTop: 10 },
 });

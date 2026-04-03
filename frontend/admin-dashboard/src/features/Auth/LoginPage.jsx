@@ -1,92 +1,124 @@
 import React, { useState } from 'react';
 import { useStore } from '../../store/useStore';
-import { Zap, Lock, Mail, AlertCircle, ShieldAlert } from 'lucide-react';
+import { Zap, Lock, Mail, AlertCircle, ShieldAlert, Eye, EyeOff } from 'lucide-react';
 
 const LoginPage = () => {
   const { login } = useStore();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
+    setLoading(true);
+    setError('');
+    
+    // Simulate network delay
+    await new Promise(r => setTimeout(r, 800));
+    
     if (email === 'admin' && password === '123') {
       login();
     } else {
       setError('Invalid credentials. Hint: admin / 123');
+      setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-darker flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Background gradients */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-ai/20 rounded-full blur-[120px] opacity-20 pointer-events-none"></div>
-      
-      <div className="w-full max-w-md glass-panel p-8 relative z-10 animate-in fade-in zoom-in duration-500">
+    <div className="min-h-screen bg-surface-0 flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Ambient background */}
+      <div className="absolute top-1/4 left-1/3 w-[600px] h-[600px] bg-ai/8 rounded-full blur-[100px] pointer-events-none"></div>
+      <div className="absolute bottom-1/4 right-1/3 w-[400px] h-[400px] bg-success/5 rounded-full blur-[80px] pointer-events-none"></div>
+
+      <div className="w-full max-w-[420px] relative z-10 animate-fade-up">
+        {/* Logo */}
         <div className="flex flex-col items-center mb-8">
-          <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-success to-ai flex items-center justify-center shadow-lg shadow-success/20 mb-4">
-            <Zap size={32} className="text-white" />
+          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-ai to-ai-dark flex items-center justify-center shadow-glow-ai mb-5">
+            <Zap size={28} className="text-white" />
           </div>
-          <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-white/70">
-            ZeroRukawat Admin
+          <h1 className="text-display font-display bg-clip-text text-transparent bg-gradient-to-b from-txt-primary to-txt-secondary">
+            ZeroRukawat
           </h1>
-          <p className="text-gray-400 mt-2 text-sm text-center">Secure command center access</p>
+          <p className="text-body text-txt-tertiary mt-2">Admin Command Center</p>
         </div>
 
-        <form onSubmit={handleLogin} className="space-y-5">
-          {error && (
-            <div className="p-3 rounded-lg bg-risk/10 border border-risk/20 flex items-center space-x-2 text-risk text-sm">
-              <AlertCircle size={16} />
-              <span>{error}</span>
-            </div>
-          )}
-
-          <div className="space-y-1">
-            <label className="text-sm font-medium text-gray-300 ml-1">Username / Email</label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-500">
-                <Mail size={18} />
+        {/* Login Card */}
+        <div className="glass-panel p-8">
+          <form onSubmit={handleLogin} className="space-y-5">
+            {error && (
+              <div className="p-3 rounded-xl bg-risk/10 border border-risk/15 flex items-center gap-2.5 text-risk text-sm animate-fade-up">
+                <AlertCircle size={16} className="shrink-0" />
+                <span>{error}</span>
               </div>
-              <input 
-                type="text" 
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full bg-black/20 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-white placeholder:text-gray-600 focus:outline-none focus:border-ai/50 focus:ring-1 focus:ring-ai/50 transition-all"
-                placeholder="admin"
-              />
-            </div>
-          </div>
+            )}
 
-          <div className="space-y-1">
-            <label className="text-sm font-medium text-gray-300 ml-1">Password</label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-500">
-                <Lock size={18} />
+            <div className="space-y-1.5">
+              <label htmlFor="login-email" className="text-caption text-txt-secondary ml-0.5">Username</label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-txt-muted">
+                  <Mail size={16} />
+                </div>
+                <input
+                  id="login-email"
+                  type="text"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="input pl-10"
+                  placeholder="Enter username"
+                  autoComplete="username"
+                />
               </div>
-              <input 
-                type="password" 
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full bg-black/20 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-white placeholder:text-gray-600 focus:outline-none focus:border-ai/50 focus:ring-1 focus:ring-ai/50 transition-all"
-                placeholder="••••••••"
-              />
             </div>
-          </div>
 
-          <button 
-            type="submit"
-            className="w-full flex items-center justify-center space-x-2 bg-ai text-white rounded-xl py-3 font-bold hover:bg-ai/90 shadow-lg shadow-ai/20 transition-all hover:-translate-y-0.5 mt-2"
-          >
-            <span>Authenticate</span>
-            <ShieldAlert size={18} />
-          </button>
-        </form>
+            <div className="space-y-1.5">
+              <label htmlFor="login-password" className="text-caption text-txt-secondary ml-0.5">Password</label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-txt-muted">
+                  <Lock size={16} />
+                </div>
+                <input
+                  id="login-password"
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="input pl-10 pr-11"
+                  placeholder="Enter password"
+                  autoComplete="current-password"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-txt-muted hover:text-txt-secondary transition-colors"
+                  tabIndex={-1}
+                >
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
+            </div>
 
-        <div className="mt-8 text-center border-t border-white/5 pt-6">
-          <p className="text-xs text-gray-500">
-            Protected by ZeroRukawat Enterprise Security
-          </p>
+            <button
+              type="submit"
+              disabled={loading || !email || !password}
+              className="btn-primary w-full py-3 mt-2"
+            >
+              {loading ? (
+                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+              ) : (
+                <>
+                  <span>Authenticate</span>
+                  <ShieldAlert size={16} />
+                </>
+              )}
+            </button>
+          </form>
         </div>
+
+        {/* Footer */}
+        <p className="text-center text-overline text-txt-muted mt-6">
+          Protected by ZeroRukawat Enterprise Security
+        </p>
       </div>
     </div>
   );
