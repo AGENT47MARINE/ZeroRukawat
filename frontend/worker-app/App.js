@@ -96,6 +96,7 @@ const useStore = create((set, get) => ({
   onboardingLoading: false,
   onboardingError: '',
   dashboardError: '',
+  payoutOverlayVisible: false,
   otpReference: '',
   registrationToken: '',
   otpMode: 'register',
@@ -298,6 +299,7 @@ const useStore = create((set, get) => ({
       token: null,
       onboardingStage: 'METHOD_SELECT',
       appState: 'NORMAL',
+      payoutOverlayVisible: false,
       onboardingError: '',
       dashboardError: '',
       recentPayouts: [],
@@ -322,12 +324,15 @@ const useStore = create((set, get) => ({
     const { user, token } = get();
     if (!user?.id || !token) return;
 
-    set({ appState: 'TRIGGERED', dashboardError: '' });
+    set({ appState: 'TRIGGERED', dashboardError: '', payoutOverlayVisible: true });
     try {
       await api.initiatePayout(user.id, { disrupted_days: 1 }, token);
       await get().hydrateDashboard();
     } catch (e) {
       set({ dashboardError: e?.message || 'Unable to initiate payout', appState: 'NORMAL' });
+    } finally {
+      // Always hide the fullscreen loader once initiate flow completes.
+      set({ payoutOverlayVisible: false });
     }
   },
 }));
@@ -888,23 +893,15 @@ const ProfileTab = () => {
 // FULLSCREEN OVERLAY
 // ═══════════════════════════════════════════
 const FullScreenDisruption = () => {
-  const { appState } = useStore();
-  if (appState !== 'TRIGGERED' && appState !== 'PAID') return null;
+  const { payoutOverlayVisible } = useStore();
+  if (!payoutOverlayVisible) return null;
   return (
     <Animated.View entering={FadeIn} style={s.overlay}>
-      {appState === 'TRIGGERED' ? (
-        <View style={s.overlayInner}>
-          <ActivityIndicator size="large" color={T.primary} />
-          <Text style={s.overlayTitle}>Processing Payout</Text>
-          <Text style={s.overlaySub}>Validating disruption parameters...</Text>
-        </View>
-      ) : (
-        <Animated.View entering={FadeInUp} style={s.overlayInner}>
-          <View style={s.confirmCircle}><Ionicons name="checkmark" size={48} color={T.success} /></View>
-          <Text style={[s.overlayTitle, { color: T.success, fontSize: 32, fontWeight: '900' }]}>₹450 Paid!</Text>
-          <Text style={s.overlaySub}>For Severe Heatwave disruption.</Text>
-        </Animated.View>
-      )}
+      <View style={s.overlayInner}>
+        <ActivityIndicator size="large" color={T.primary} />
+        <Text style={s.overlayTitle}>Processing Payout</Text>
+        <Text style={s.overlaySub}>Validating disruption parameters...</Text>
+      </View>
     </Animated.View>
   );
 };
