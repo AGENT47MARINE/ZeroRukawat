@@ -20,6 +20,30 @@ const VALID_ZONES = [
   'Chennai_Central', 'Hyderabad_West', 'Kolkata_Central',
 ];
 
+const PAYOUT_STAGE_LABELS = {
+  requested: 'Requested',
+  fraud_check: 'Fraud Check',
+  income_estimation: 'Income Estimate',
+  payment_processing: 'Processing Transfer',
+  credited: 'Credited',
+  held: 'Held',
+  blocked: 'Blocked',
+  failed: 'Failed',
+};
+
+const TERMINAL_STAGES = new Set(['credited', 'held', 'blocked', 'failed']);
+
+function getStageLabel(stage) {
+  return PAYOUT_STAGE_LABELS[stage] || 'Processing';
+}
+
+function getStageColor(stage) {
+  if (stage === 'credited') return '#16a34a';
+  if (stage === 'held') return '#d97706';
+  if (stage === 'blocked' || stage === 'failed') return '#dc2626';
+  return '#4F46E5';
+}
+
 // ── Helpers ──────────────────────────────────────────────────────────────────
 /**
  * Build 7-day bar chart data from real payouts returned by the backend.
@@ -105,6 +129,8 @@ const App = () => {
   const [activeDisruptions, setActiveDisruptions] = useState([]);
   const [workerInsights, setWorkerInsights]       = useState(null);
   const [tabLoading, setTabLoading]               = useState(false);
+  const [payoutActionLoading, setPayoutActionLoading] = useState(false);
+  const [payoutActionError, setPayoutActionError] = useState('');
 
   // ─ Form state
   const [formData, setFormData] = useState({
@@ -124,6 +150,9 @@ const App = () => {
   const aiRiskScore   = workerInsights?.risk?.score ?? currentWorker?.risk_score ?? 0.5;
   const aiDisruption  = workerInsights?.disruption || null;
   const riskInfo      = riskLabel(aiRiskScore);
+  const inProgressPayout = payouts.find(
+    p => !(p.is_terminal ?? TERMINAL_STAGES.has(p.payout_stage))
+  );
   const workerInitials = currentWorker
     ? currentWorker.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
     : '--';
@@ -139,6 +168,19 @@ const App = () => {
     }
   };
 
+  const loadPayouts = useCallback(async (workerId, jwt, showLoader = false) => {
+    if (!workerId || !jwt) return;
+    if (showLoader) setTabLoading(true);
+    try {
+      const payResp = await api.getPayouts(workerId, jwt);
+      setPayouts(payResp.data || []);
+    } catch (e) {
+      console.error('Payouts fetch:', e);
+    } finally {
+      if (showLoader) setTabLoading(false);
+    }
+  }, []);
+
   // ─── Session restore on mount ──────────────────────────────────────────────
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
@@ -150,8 +192,7 @@ const App = () => {
         setCurrentWorker(worker);
         const polResp = await api.getPolicy(worker.id, token);
         setCurrentPolicy(polResp.data);
-        const payResp = await api.getPayouts(worker.id, token);
-        setPayouts(payResp.data || []);
+        await loadPayouts(worker.id, token);
         const disResp = await api.getActiveDisruptions();
         setActiveDisruptions(disResp.data || []);
         await loadWorkerInsights(token);
@@ -161,7 +202,7 @@ const App = () => {
         setToken(null);
       }
     })();
-  }, []); // runs once on mount to restore session
+  }, [loadPayouts]); // runs once on mount to restore session
 
   // ─── KYC animation ────────────────────────────────────────────────────────
   useEffect(() => {
@@ -195,12 +236,18 @@ const App = () => {
   // ─── Fetch payouts when payouts tab is opened ─────────────────────────────
   useEffect(() => {
     if (activeTab !== 'payouts' || !currentWorker || !token) return;
-    setTabLoading(true);
-    api.getPayouts(currentWorker.id, token)
-      .then(r  => setPayouts(r.data || []))
-      .catch(e  => console.error('Payouts fetch:', e))
-      .finally(() => setTabLoading(false));
-  }, [activeTab, currentWorker, token]);
+    loadPayouts(currentWorker.id, token, true);
+  }, [activeTab, currentWorker, token, loadPayouts]);
+
+  useEffect(() => {
+    if (activeTab !== 'payouts' || !currentWorker || !token || !inProgressPayout) return;
+
+    const timer = setInterval(() => {
+      loadPayouts(currentWorker.id, token, false);
+    }, 2500);
+
+    return () => clearInterval(timer);
+  }, [activeTab, currentWorker, token, inProgressPayout?.claim_id, loadPayouts]);
 
   // ─── Helpers ──────────────────────────────────────────────────────────────
   const phone = () => formData.mobile.replace(/\D/g, '').slice(-10);
@@ -250,6 +297,26 @@ const App = () => {
     setWorkerInsights(null);
     setPayouts([]); setActiveDisruptions([]);
     setScreen('splash');
+  };
+
+  const handleMockPayout = async () => {
+    if (!currentWorker || !token) return;
+
+    setPayoutActionLoading(true);
+    setPayoutActionError('');
+
+    try {
+      await api.initiateMockPayout(
+        currentWorker.id,
+        { disrupted_days: 1 },
+        token
+      );
+      await loadPayouts(currentWorker.id, token, false);
+    } catch (err) {
+      setPayoutActionError(err.message);
+    } finally {
+      setPayoutActionLoading(false);
+    }
   };
 
   // ── SCREEN — Splash ────────────────────────────────────────────────────────
@@ -610,24 +677,81 @@ const App = () => {
       case 'payouts': return (
         <div className="slide-up">
           <h3 style={{ marginBottom: 20 }}>Payout History</h3>
+
+          <div className="card" style={{ borderLeft: '4px solid #4F46E5' }}>
+            <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 8 }}>Run AI-Driven Payout Workflow</div>
+            <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 12 }}>
+              Payout decision is automatic based on AI risk scoring and fraud checks.
+            </p>
+
+            <button
+              onClick={handleMockPayout}
+              className="btn btn-primary"
+              disabled={payoutActionLoading || tabLoading}
+              style={{
+                opacity: payoutActionLoading || tabLoading ? 0.7 : 1,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 8,
+              }}
+            >
+              {payoutActionLoading ? <><Loader size={16} /> Initiating...</> : 'Initiate AI Payout'}
+            </button>
+
+            {inProgressPayout && (
+              <div style={{ marginTop: 10, fontSize: 12, color: '#4F46E5', fontWeight: 600 }}>
+                Live status: {getStageLabel(inProgressPayout.payout_stage)}
+              </div>
+            )}
+          </div>
+
+          {payoutActionError && (
+            <ErrorBanner message={payoutActionError} onClose={() => setPayoutActionError('')} />
+          )}
+
           {tabLoading ? <Spinner /> : payouts.length === 0 ? (
             <div className="card" style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>
               <TrendingUp size={40} style={{ marginBottom: 12, opacity: 0.3 }} />
-              <p style={{ fontSize: 14 }}>No approved payouts yet.</p>
-              <p style={{ fontSize: 12, marginTop: 4 }}>Payouts appear here once a disruption is processed and approved.</p>
+              <p style={{ fontSize: 14 }}>No payout records yet.</p>
+              <p style={{ fontSize: 12, marginTop: 4 }}>Initiate a mock payout to see stage progression and final status.</p>
             </div>
           ) : payouts.map((p, i) => (
             <div key={i} className="card">
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
                 <span style={{ fontSize: 14, fontWeight: 700 }}>{p.reason}</span>
-                <span style={{ fontSize: 14, fontWeight: 800, color: '#16a34a' }}>₹{p.amount?.toLocaleString('en-IN')}</span>
+                <span style={{ fontSize: 14, fontWeight: 800, color: p.amount ? '#16a34a' : 'var(--text-muted)' }}>
+                  {p.amount ? `₹${p.amount?.toLocaleString('en-IN')}` : 'Pending'}
+                </span>
               </div>
               <div style={{ fontSize: 12, color: 'var(--text-muted)', display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
                 <span>{p.date}</span>
-                <span className="badge badge-success" style={{ fontSize: 8 }}>{p.status}</span>
+                <span className="badge" style={{ fontSize: 8, background: `${getStageColor(p.payout_stage)}22`, color: getStageColor(p.payout_stage) }}>
+                  {getStageLabel(p.payout_stage)}
+                </span>
               </div>
+
+              {Array.isArray(p.stage_timeline) && p.stage_timeline.length > 0 && (
+                <div style={{ marginBottom: 8, background: '#f8fafc', borderRadius: 10, padding: 10 }}>
+                  {p.stage_timeline.map((step, idx) => (
+                    <div key={`${step.stage}-${idx}`} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--text-muted)', marginBottom: idx === p.stage_timeline.length - 1 ? 0 : 6 }}>
+                      <span style={{ fontWeight: 600, color: '#334155' }}>{getStageLabel(step.stage)}</span>
+                      <span>{step.at ? new Date(step.at).toLocaleTimeString('en-IN') : '--:--'}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {p.payout_error_reason && (
+                <div style={{ marginBottom: 8, fontSize: 11, color: '#dc2626' }}>
+                  {p.payout_error_reason}
+                </div>
+              )}
               <div style={{ borderTop: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 8 }}>
-                <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>ID: {p.claim_id?.slice(0, 18)}</span>
+                <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>
+                  ID: {p.claim_id?.slice(0, 18)}
+                  {p.transaction_id ? ` · TXN: ${p.transaction_id}` : ''}
+                </span>
                 <MoreHorizontal size={16} color="var(--text-muted)" />
               </div>
             </div>

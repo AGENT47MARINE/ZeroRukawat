@@ -133,6 +133,18 @@ function App() {
     return <LoginPage />;
   }
 
+  if (!token) {
+    return (
+      <LoginView
+        form={authForm}
+        setForm={setAuthForm}
+        onSubmit={handleLogin}
+        loading={authLoading}
+        error={authError || pageError}
+      />
+    );
+  }
+
   return (
     <BrowserRouter>
       <div className="flex h-screen overflow-hidden bg-surface-0">

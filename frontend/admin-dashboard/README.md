@@ -1,16 +1,51 @@
-# React + Vite
+# ZeroRukawat Admin Dashboard
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This dashboard now uses live backend APIs only. All previous inline mock datasets were removed.
 
-Currently, two official plugins are available:
+## Run Locally
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+1. Start backend API from `backend/`:
 
-## React Compiler
+```bash
+python run.py
+```
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+2. Start dashboard from `frontend/admin-dashboard/`:
 
-## Expanding the ESLint configuration
+```bash
+npm install
+npm run dev
+```
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## Environment Configuration
+
+Create a `.env` file in `frontend/admin-dashboard/` if needed:
+
+```bash
+VITE_API_BASE_URL=http://localhost:8000/api/v1
+VITE_ADMIN_PHONE=9999999999
+VITE_ADMIN_PASSWORD=Admin@2024
+```
+
+- `VITE_API_BASE_URL` points to Flask API base route.
+- `VITE_ADMIN_PHONE` and `VITE_ADMIN_PASSWORD` are optional defaults for login form.
+
+## Authentication
+
+The dashboard calls authenticated admin endpoints:
+
+- `POST /api/v1/auth/admin/login`
+- `GET /api/v1/admin/dashboard/stats`
+- `GET /api/v1/admin/workers`
+- `GET /api/v1/admin/claims/pending`
+- `GET /api/v1/claims/`
+- `GET /api/v1/disruptions/`
+- `GET /api/v1/disruptions/active`
+
+It stores the JWT in local storage key `zr_admin_token`.
+
+## Notes
+
+- The Settings tab now reports real endpoint statuses and backend health.
+- Fraud actions in dashboard call live resolution API: `PATCH /api/v1/claims/{claim_id}/resolve`.
+- Disruption creation calls live API: `POST /api/v1/disruptions/`.

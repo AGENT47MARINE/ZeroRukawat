@@ -22,6 +22,7 @@ class BaseConfig:
     TWILIO_AUTH_TOKEN = os.environ.get('TWILIO_AUTH_TOKEN')
     TWILIO_VERIFY_SERVICE_SID = os.environ.get('TWILIO_VERIFY_SERVICE_SID')
     TWILIO_FROM_NUMBER = os.environ.get('TWILIO_FROM_NUMBER')
+    ALLOW_FORCE_MOCK_OUTCOME = os.environ.get('ALLOW_FORCE_MOCK_OUTCOME', 'true').lower() == 'true'
 
 
 class DevelopmentConfig(BaseConfig):
@@ -38,8 +39,17 @@ class ProductionConfig(BaseConfig):
     POLLER_INTERVAL_MINUTES = 15
 
 
+class TestingConfig(BaseConfig):
+    TESTING = True
+    DEBUG = False
+    SQLALCHEMY_DATABASE_URI = os.environ.get('TEST_DATABASE_URL', 'sqlite:///:memory:')
+    POLLER_INTERVAL_MINUTES = 9999
+    ALLOW_FORCE_MOCK_OUTCOME = True
+
+
 config = {
     'development': DevelopmentConfig,
     'production': ProductionConfig,
+    'testing': TestingConfig,
     'default': DevelopmentConfig,
 }
